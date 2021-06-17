@@ -1,0 +1,62 @@
+{
+	"name": "ecs",
+	"version": "0.1.0",
+	"description": "",
+	"main": "dist/index.js",
+	"typings": "dist/index.d.ts",
+	"scripts": {
+		"bench": "tsc && node ./bench/bench.js",
+		"test": "jest",
+		"build": "tsc"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/releaseband/ecs.git"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/releaseband/ecs/issues"
+	},
+	"homepage": "https://github.com/releaseband/ecs#readme",
+	"dependencies": {
+		"fastbitset": "^0.4.0",
+		"tslib": "^2.3.0"
+	},
+	"devDependencies": {
+		"@commitlint/cli": "^12.1.4",
+		"@commitlint/config-conventional": "^12.1.4",
+		"@microsoft/tsdoc": "^0.13.2",
+		"@types/fastbitset": "^0.2.0",
+		"@types/jest": "^26.0.23",
+		"eslint-plugin-tsdoc": "^0.2.14",
+		"husky": "^5.2.0",
+		"jest": "^27.0.4",
+		"ts-jest": "^27.0.3",
+		"ts-node": "^10.0.0",
+		"typescript": "^4.3.3"
+	},
+	"files": [
+		"dist"
+	],
+  "jest": {
+	"collectCoverage": true,
+    "transform": {
+      "^.+\\.ts?$": "ts-jest"
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "js"
+    ],
+    "testMatch": [
+      "**/__tests__/*.(js|ts)"
+    ],
+    "transformIgnorePatterns": [
+      "/node_modules/"
+    ],
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1"
+    }
+  }
+}
