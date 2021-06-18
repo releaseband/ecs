@@ -22,6 +22,17 @@ describe('Query tests', () => {
 		expect(query.mask.has(TestComponent0.index)).toBe(true);
 		expect(query.entities).toBeDefined();
 	});
+	it('Create query in any order', () => {
+		const world = new World(ENTITIES_COUNT);
+		world.registerComponent(TestComponent0);
+
+		const entity = world.createEntity();
+		world.addComponent(entity, new TestComponent0());
+
+		const query = world.createQuery([TestComponent0]);
+
+		expect(query.entities.size).toEqual(1);
+	});
 	it('Create multiple query', () => {
 		const world = new World(ENTITIES_COUNT);
 		world.registerComponent(TestComponent0);
@@ -138,5 +149,55 @@ describe('Query tests', () => {
 		const query1 = world.createQuery([TestComponent1, TestComponent0]);
 		expect(world.queries.length).toEqual(1);
 		expect(query0).toEqual(query1);
+	});
+	it('OnEntityAdd event sub/unsubscribe', () => {
+		const world = new World(ENTITIES_COUNT);
+		world.registerComponent(TestComponent0);
+		world.registerComponent(TestComponent1);
+
+		let testValue = null;
+
+		const testCallBack = (entityId: number) => (testValue = entityId);
+		const query = world.createQuery([TestComponent0, TestComponent1]);
+		query.onEntityAdd.sub(testCallBack);
+
+		const entity0 = world.createEntity();
+		world.addComponent(entity0, new TestComponent0());
+		world.addComponent(entity0, new TestComponent1());
+
+		expect(testValue).toEqual(entity0);
+
+		query.onEntityAdd.unsub((entityId: number) => (testValue = entityId));
+
+		const entity1 = world.createEntity();
+		world.addComponent(entity1, new TestComponent0());
+		world.addComponent(entity1, new TestComponent1());
+
+		expect(testValue).not.toEqual(entity1);
+	});
+	it('OnEntityRemove event sub/unsubscribe', () => {
+		const world = new World(ENTITIES_COUNT);
+		world.registerComponent(TestComponent0);
+		world.registerComponent(TestComponent1);
+
+		let testValue = null;
+
+		const query = world.createQuery([TestComponent0, TestComponent1]);
+		query.onEntityRemove.sub((entityId: number) => (testValue = entityId));
+
+		const entity0 = world.createEntity();
+		world.addComponent(entity0, new TestComponent0());
+		world.addComponent(entity0, new TestComponent1());
+
+		const entity1 = world.createEntity();
+		world.addComponent(entity1, new TestComponent0());
+		world.addComponent(entity1, new TestComponent1());
+
+		world.removeComponent(entity0, TestComponent1);
+		expect(testValue).toEqual(entity0);
+
+		query.onEntityRemove.unsub((entityId: number) => (testValue = entityId));
+		world.removeComponent(entity1, TestComponent1);
+		expect(testValue).not.toEqual(entity1);
 	});
 });

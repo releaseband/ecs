@@ -67,6 +67,9 @@ export class World {
 		}
 		const query = new Query(this, mask);
 		this.queries.push(query);
+		for (const entityId of this.entities.values()) {
+			if (query.mask.difference_size(this.masks[entityId]) === 0) query.add(entityId);
+		}
 		return query;
 	}
 

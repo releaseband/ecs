@@ -1,15 +1,20 @@
 import FastBitSet from 'fastbitset';
 import { World } from './World';
+import { Emitter } from './Emitter';
 
 export class Query {
 	world: World;
 	mask: FastBitSet;
 	entities: Set<number>;
+	onEntityAdd: Emitter;
+	onEntityRemove: Emitter;
 
 	constructor(world: World, mask: FastBitSet) {
 		this.world = world;
 		this.mask = mask;
 		this.entities = new Set();
+		this.onEntityAdd = new Emitter();
+		this.onEntityRemove = new Emitter();
 	}
 
 	/**
@@ -19,6 +24,7 @@ export class Query {
 	 */
 	add(entityId: number): void {
 		this.entities.add(entityId);
+		this.onEntityAdd.emit(entityId);
 	}
 
 	/**
@@ -28,5 +34,6 @@ export class Query {
 	 */
 	remove(entityId: number): void {
 		this.entities.delete(entityId);
+		this.onEntityRemove.emit(entityId);
 	}
 }
