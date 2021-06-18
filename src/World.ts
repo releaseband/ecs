@@ -1,6 +1,7 @@
 import FastBitSet from 'fastbitset';
 import { Constructor } from './Helpers';
 import { Query } from './Query';
+import { System } from './System';
 
 export class World {
 	nextId = 0;
@@ -12,6 +13,7 @@ export class World {
 	queries: Query[];
 	lookupTable: Int32Array;
 	registeredComponents: Map<string, number>;
+	systems: System[];
 
 	constructor(entitiesMax: number) {
 		this.entitiesMax = entitiesMax;
@@ -22,6 +24,7 @@ export class World {
 		this.masks = new Array(entitiesMax).fill(new FastBitSet());
 		this.queries = [];
 		this.registeredComponents = new Map();
+		this.systems = [];
 	}
 
 	/**
@@ -140,5 +143,39 @@ export class World {
 	getComponent<T>(entityId: number, ctor: Constructor<T>): T {
 		const componentIndex = ctor.index;
 		return <T>this.components[entityId][componentIndex];
+	}
+
+	/**
+	 * Add system object to world
+	 *
+	 * @param {System} system System class instance
+	 */
+	addSystem(system: System): void {
+		this.systems.push(system);
+	}
+
+	/**
+	 * Remove system from world
+	 *
+	 * @param {Constructor<System>} ctor system constructor
+	 */
+	removeSystem(ctor: Constructor<System>): void {
+		for (const [index, system] of this.systems.entries()) {
+			if (system.constructor.name === ctor.name) {
+				this.systems.splice(index, 1);
+				return;
+			}
+		}
+	}
+
+	/**
+	 * Call update method on each added system
+	 *
+	 * @param {number} dt delta time
+	 */
+	update(dt: number) {
+		for (const system of this.systems) {
+			system.update(dt);
+		}
 	}
 }

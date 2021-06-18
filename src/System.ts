@@ -1,3 +1,5 @@
+import { World } from './World';
+
 export interface System {
 	/**
 	 * Method will be executed on every world update
