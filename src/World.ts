@@ -19,7 +19,7 @@ export class World {
 		this.lookupTable = new Int32Array(entitiesMax).fill(-1);
 		this.entities = [];
 		this.components = new Array(entitiesMax).fill([]);
-		this.masks = new Array(entitiesMax);
+		this.masks = new Array(entitiesMax).fill(new FastBitSet());
 		this.queries = [];
 		this.registeredComponents = new Map();
 	}
@@ -54,11 +54,15 @@ export class World {
 	 * @returns {Query} Query object
 	 */
 	createQuery<T>(components: Constructor<T>[] = []): Query {
-		const mask = [];
+		const indices = [];
 		for (const component of components) {
-			mask.push(component.index);
+			indices.push(component.index);
 		}
-		const query = new Query(this, new FastBitSet(mask));
+		const mask = new FastBitSet(indices);
+		for (const query of this.queries.values()) {
+			if (query.mask.equals(mask)) return query;
+		}
+		const query = new Query(this, mask);
 		this.queries.push(query);
 		return query;
 	}
@@ -71,7 +75,7 @@ export class World {
 	createEntity() {
 		const entityId = this.getNextId();
 		this.lookupTable[entityId] = this.entities.length;
-		this.masks[entityId] = new FastBitSet();
+		this.masks[entityId].clear();
 		this.entities.push(entityId);
 		return entityId;
 	}
@@ -82,7 +86,7 @@ export class World {
 	 * @param {number} entityId
 	 */
 	removeEntity(entityId: number): void {
-		if (this.lookupTable[entityId] === -1) throw Error('Entity already removed');
+		if (this.lookupTable[entityId] === -1) throw new Error('Entity does not exist');
 		const index = this.lookupTable[entityId];
 		const last = this.entities.pop();
 		if (last && index < this.entities.length) {
@@ -119,7 +123,7 @@ export class World {
 	removeComponent<T>(entityId: number, ctor: Constructor<T>): void {
 		const componentIndex = ctor.index;
 		this.masks[entityId].remove(componentIndex);
-		this.components[entityId][componentIndex] = null;
+		this.components[entityId][componentIndex] = undefined;
 		for (const query of this.queries) {
 			const diff = query.mask.difference_size(this.masks[entityId]);
 			if (diff !== 0) query.remove(entityId);
