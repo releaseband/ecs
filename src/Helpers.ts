@@ -1,7 +1,8 @@
 declare global {
 	interface Object {
-		index: number;
+		cachedComponentId: string;
 	}
 }
 
-export type Constructor<T> = { new (...args: any[]): T };
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export type Constructor<T> = new (...args: any[]) => T;

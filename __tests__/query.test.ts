@@ -15,11 +15,12 @@ describe('Query tests', () => {
 		world.registerComponent(TestComponent0);
 
 		const query = world.createQuery([TestComponent0]);
+		const componentIndex = world.getComponentIndex(TestComponent0);
 		expect(query).toBeDefined();
 		expect(world.queries.length).toEqual(1);
 		expect(world.queries).toContain(query);
 		expect(query.mask).toBeDefined();
-		expect(query.mask.has(TestComponent0.index)).toBe(true);
+		expect(query.mask.has(componentIndex)).toBe(true);
 		expect(query.entities).toBeDefined();
 	});
 	it('Create query in any order', () => {
@@ -54,7 +55,8 @@ describe('Query tests', () => {
 			expect(world.queries).toContain(query);
 			expect(query.mask).toBeDefined();
 			ctors.forEach((ctor) => {
-				expect(query.mask.has(ctor.index)).toBe(true);
+				const componentIndex = world.getComponentIndex(ctor);
+				expect(query.mask.has(componentIndex)).toBe(true);
 			});
 			createdQueries.push(query);
 		});
@@ -85,9 +87,9 @@ describe('Query tests', () => {
 		world.registerComponent(TestComponent2);
 
 		const query = world.createQuery([TestComponent0, TestComponent1, TestComponent2]);
-		expect(query.mask.has(TestComponent0.index)).toEqual(true);
-		expect(query.mask.has(TestComponent1.index)).toEqual(true);
-		expect(query.mask.has(TestComponent2.index)).toEqual(true);
+		expect(query.mask.has(world.getComponentIndex(TestComponent0))).toEqual(true);
+		expect(query.mask.has(world.getComponentIndex(TestComponent1))).toEqual(true);
+		expect(query.mask.has(world.getComponentIndex(TestComponent2))).toEqual(true);
 
 		const entity = world.createEntity();
 		world.addComponent(entity, new TestComponent0());

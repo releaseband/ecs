@@ -11,15 +11,22 @@ describe('World tests', () => {
 		expect(world.entitiesMax).toEqual(ENTITIES_COUNT);
 		expect(world.components.length).toEqual(ENTITIES_COUNT);
 		expect(world.masks.length).toEqual(ENTITIES_COUNT);
+		expect(world.registeredComponents).toBeDefined();
+		expect(Object.keys(world.registeredComponents).length).toEqual(0);
 	});
 	it('Register components', () => {
 		const world = new World(ENTITIES_COUNT);
 		world.registerComponent(TestComponent0);
 		world.registerComponent(TestComponent1);
-		expect(world.registeredComponents.size).toEqual(2);
-		expect(world.registeredComponents.has('TestComponent0')).toEqual(true);
-		expect(world.registeredComponents.has('TestComponent1')).toEqual(true);
-		expect(TestComponent0.index).toEqual(0);
-		expect(TestComponent1.index).toEqual(1);
+		expect(Object.keys(world.registeredComponents).length).toEqual(2);
+		expect(world.getComponentIndex(TestComponent0)).toEqual(0);
+		expect(world.getComponentIndex(TestComponent1)).toEqual(1);
+	});
+	it('Must throw error for non-registered component', () => {
+		const world = new World(ENTITIES_COUNT);
+
+		expect(() => world.getComponentIndex(TestComponent0)).toThrow(
+			`Component ${TestComponent0.name} is not registered`
+		);
 	});
 });

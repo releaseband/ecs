@@ -1,7 +1,7 @@
 export class Emitter {
 	private subscribers: CallableFunction[] = [];
 
-	sub(cb: Function): void {
+	sub(cb: CallableFunction): void {
 		this.subscribers.push(cb);
 	}
 
@@ -9,7 +9,7 @@ export class Emitter {
 		this.subscribers = this.subscribers.filter((callback) => callback === cb);
 	}
 
-	emit<T extends any[]>(...args: T): void {
+	emit<T extends unknown[]>(...args: T): void {
 		for (const subscriber of this.subscribers) {
 			subscriber(...args);
 		}

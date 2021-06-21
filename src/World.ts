@@ -12,7 +12,7 @@ export class World {
 	masks: FastBitSet[];
 	queries: Query[];
 	lookupTable: Int32Array;
-	registeredComponents: Map<string, number>;
+	registeredComponents: { [componentName: string]: number };
 	systems: System[];
 
 	constructor(entitiesMax: number) {
@@ -23,27 +23,41 @@ export class World {
 		this.components = new Array(entitiesMax).fill([]);
 		this.masks = new Array(entitiesMax).fill(new FastBitSet());
 		this.queries = [];
-		this.registeredComponents = new Map();
+		this.registeredComponents = {};
 		this.systems = [];
+	}
+
+	/**
+	 *
+	 * @param componentName - component constructor name
+	 * @returns registered component index
+	 * @throws Will throw an error if component not registered
+	 *
+	 */
+	getComponentIndex<T>(ctor: Constructor<T>): number {
+		const index = this.registeredComponents[ctor.cachedComponentId];
+		if (index === undefined)
+			throw new Error(`Component ${ctor.cachedComponentId} is not registered`);
+		return index;
 	}
 
 	/**
 	 * Register component class
 	 *
-	 * @param {Class<T>} component
+	 * @param component - component constructor
 	 */
 	registerComponent<T>(ctor: Constructor<T>): void {
-		if (!this.registeredComponents.has(ctor.name)) {
-			const n = this.registeredComponents.size;
-			ctor.index = n;
-			this.registeredComponents.set(ctor.name, n);
+		if (!this.registeredComponents[ctor.name]) {
+			ctor.cachedComponentId = ctor.name;
+			const index = Object.keys(this.registeredComponents).length;
+			this.registeredComponents[ctor.name] = index;
 		}
 	}
 
 	/**
 	 * Get next free entity id
 	 *
-	 * @returns {number} id number
+	 * @returns new entity id
 	 */
 	private getNextId(): number {
 		const index = this.pool.pop();
@@ -53,13 +67,13 @@ export class World {
 	/**
 	 * Create query
 	 *
-	 * @param {Constructor<T>[]} components Array of components classes
-	 * @returns {Query} Query object
+	 * @param components - array of components classes
+	 * @returns Query object
 	 */
 	createQuery<T>(components: Constructor<T>[] = []): Query {
 		const indices = [];
 		for (const component of components) {
-			indices.push(component.index);
+			indices.push(this.getComponentIndex(component));
 		}
 		const mask = new FastBitSet(indices);
 		for (const query of this.queries.values()) {
@@ -76,9 +90,9 @@ export class World {
 	/**
 	 * Create entity
 	 *
-	 * @returns {number} Entity id
+	 * @returns entity id
 	 */
-	createEntity() {
+	createEntity(): number {
 		const entityId = this.getNextId();
 		this.lookupTable[entityId] = this.entities.length;
 		this.masks[entityId].clear();
@@ -89,10 +103,11 @@ export class World {
 	/**
 	 * Remove entity from world
 	 *
-	 * @param {number} entityId
+	 * @param entityId - entityId
+	 * @throws Will throw an error if entity does not exist
 	 */
 	removeEntity(entityId: number): void {
-		if (this.lookupTable[entityId] === -1) throw new Error('Entity does not exist');
+		if (this.lookupTable[entityId] === -1) throw new Error(`Entity ${entityId} does not exist`);
 		const index = this.lookupTable[entityId];
 		const last = this.entities.pop();
 		if (last && index < this.entities.length) {
@@ -107,27 +122,32 @@ export class World {
 	}
 
 	/**
+	 * Add component object to entity
 	 *
-	 * @param {number} entityId
-	 * @param {T} component class instance
+	 * @param entityId - entity id
+	 * @param component - component class instance
 	 */
-	addComponent<T>(entityId: number, component: T): void {
-		const componentIndex = Object.getPrototypeOf(component).constructor.index;
+	public addComponent<T extends unknown>(entityId: number, component: NonNullable<T>): void {
+		const name = Object.getPrototypeOf(component).constructor.cachedComponentId;
+		const componentIndex = this.registeredComponents[name];
+		if (componentIndex === undefined) throw new Error(`Component ${name} is not registered`);
 		this.components[entityId][componentIndex] = component;
-		this.masks[entityId].add(componentIndex);
+		const mask = this.masks[entityId];
+		mask.add(componentIndex);
 		for (const query of this.queries) {
-			const diff = query.mask.difference_size(this.masks[entityId]);
+			const diff = query.mask.difference_size(mask);
 			if (diff === 0) query.add(entityId);
 		}
 	}
 
 	/**
+	 * Remove component object from entity
 	 *
-	 * @param {number} entityId
-	 * @param {Constructor<T>} ctor component class Constructor
+	 * @param entityId - entity id
+	 * @param ctor - component class constructor
 	 */
 	removeComponent<T>(entityId: number, ctor: Constructor<T>): void {
-		const componentIndex = ctor.index;
+		const componentIndex = this.getComponentIndex(ctor);
 		this.masks[entityId].remove(componentIndex);
 		this.components[entityId][componentIndex] = undefined;
 		for (const query of this.queries) {
@@ -137,21 +157,33 @@ export class World {
 	}
 
 	/**
+	 * Is entity has specific component
 	 *
-	 * @param {number} entityId
-	 * @param {Constructor} ctor component class Constructor
-	 * @returns {T} component class instance
+	 * @param entityId - entity id
+	 * @param ctor - class constructor
+	 * @returns true if component exist,or false if not
 	 */
+	hasComponent<T>(entityId: number, ctor: Constructor<T>): boolean {
+		const componentIndex = this.getComponentIndex(ctor);
+		return !!this.components[entityId][componentIndex];
+	}
 
+	/**
+	 * Get component object by entity id
+	 *
+	 * @param entityId - entity id
+	 * @param ctor - component class constructor
+	 * @returns component class instance
+	 */
 	getComponent<T>(entityId: number, ctor: Constructor<T>): T {
-		const componentIndex = ctor.index;
+		const componentIndex = this.getComponentIndex(ctor);
 		return <T>this.components[entityId][componentIndex];
 	}
 
 	/**
-	 * Add system object to world
+	 * Add system class instance to world
 	 *
-	 * @param {System} system System class instance
+	 * @param system - system class instance
 	 */
 	addSystem(system: System): void {
 		this.systems.push(system);
@@ -160,7 +192,7 @@ export class World {
 	/**
 	 * Remove system from world
 	 *
-	 * @param {Constructor<System>} ctor system constructor
+	 * @param ctor - system class constructor
 	 */
 	removeSystem(ctor: Constructor<System>): void {
 		for (const [index, system] of this.systems.entries()) {
@@ -172,11 +204,13 @@ export class World {
 	}
 
 	/**
-	 * Call update method on each added system
+	 * Iterate through added systems and call method on each system
 	 *
-	 * @param {number} dt delta time
+	 * see {@link System}
+	 *
+	 * @param dt - delta time
 	 */
-	update(dt: number) {
+	update(dt: number): void {
 		for (const system of this.systems) {
 			system.update(dt);
 		}

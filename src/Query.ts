@@ -20,7 +20,7 @@ export class Query {
 	/**
 	 * Add entity id to query
 	 *
-	 * @param {number} entityId
+	 * @param entityId - entity id
 	 */
 	add(entityId: number): void {
 		this.entities.add(entityId);
@@ -30,7 +30,7 @@ export class Query {
 	/**
 	 * Remove entity id from query
 	 *
-	 * @param {number} entityId
+	 * @param entityId - entity id
 	 */
 	remove(entityId: number): void {
 		this.entities.delete(entityId);
