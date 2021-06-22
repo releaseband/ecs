@@ -36,8 +36,7 @@ export class World {
 	 */
 	getComponentIndex<T>(ctor: Constructor<T>): number {
 		const index = this.registeredComponents[ctor.cachedComponentId];
-		if (index === undefined)
-			throw new Error(`Component ${ctor.cachedComponentId} is not registered`);
+		if (index === undefined) throw new Error(`Component ${ctor.name} is not registered`);
 		return index;
 	}
 
@@ -68,9 +67,17 @@ export class World {
 	 * Create query
 	 *
 	 * @param components - array of components classes
+	 * @param onEntityAdd - will be called when entity added to query
+	 * @param onEntityRemove - will be called when entity removed from query
 	 * @returns Query object
 	 */
-	createQuery<T>(components: Constructor<T>[] = []): Query {
+	createQuery<T>(
+		components: Constructor<T>[] = [],
+		options?: {
+			onAddCallback?: CallableFunction;
+			onRemoveCallback?: CallableFunction;
+		}
+	): Query {
 		const indices = [];
 		for (const component of components) {
 			indices.push(this.getComponentIndex(component));
@@ -80,6 +87,8 @@ export class World {
 			if (query.mask.equals(mask)) return query;
 		}
 		const query = new Query(this, mask);
+		if (options?.onAddCallback) query.onEntityAdd.subscribe(options.onAddCallback);
+		if (options?.onRemoveCallback) query.onEntityRemove.subscribe(options.onRemoveCallback);
 		this.queries.push(query);
 		for (const entityId of this.entities.values()) {
 			if (query.mask.difference_size(this.masks[entityId]) === 0) query.add(entityId);
@@ -128,9 +137,11 @@ export class World {
 	 * @param component - component class instance
 	 */
 	public addComponent<T extends unknown>(entityId: number, component: NonNullable<T>): void {
-		const name = Object.getPrototypeOf(component).constructor.cachedComponentId;
-		const componentIndex = this.registeredComponents[name];
-		if (componentIndex === undefined) throw new Error(`Component ${name} is not registered`);
+		const ctor = Object.getPrototypeOf(component).constructor;
+		const componentIndex = this.registeredComponents[ctor.cachedComponentId];
+		if (componentIndex === undefined) {
+			throw new Error(`Component ${ctor.name} is not registered`);
+		}
 		this.components[entityId][componentIndex] = component;
 		const mask = this.masks[entityId];
 		mask.add(componentIndex);

@@ -161,7 +161,7 @@ describe('Query tests', () => {
 
 		const testCallBack = (entityId: number) => (testValue = entityId);
 		const query = world.createQuery([TestComponent0, TestComponent1]);
-		query.onEntityAdd.sub(testCallBack);
+		query.onEntityAdd.subscribe(testCallBack);
 
 		const entity0 = world.createEntity();
 		world.addComponent(entity0, new TestComponent0());
@@ -169,7 +169,7 @@ describe('Query tests', () => {
 
 		expect(testValue).toEqual(entity0);
 
-		query.onEntityAdd.unsub((entityId: number) => (testValue = entityId));
+		query.onEntityAdd.unsubscribe((entityId: number) => (testValue = entityId));
 
 		const entity1 = world.createEntity();
 		world.addComponent(entity1, new TestComponent0());
@@ -185,7 +185,7 @@ describe('Query tests', () => {
 		let testValue = null;
 
 		const query = world.createQuery([TestComponent0, TestComponent1]);
-		query.onEntityRemove.sub((entityId: number) => (testValue = entityId));
+		query.onEntityRemove.subscribe((entityId: number) => (testValue = entityId));
 
 		const entity0 = world.createEntity();
 		world.addComponent(entity0, new TestComponent0());
@@ -198,8 +198,33 @@ describe('Query tests', () => {
 		world.removeComponent(entity0, TestComponent1);
 		expect(testValue).toEqual(entity0);
 
-		query.onEntityRemove.unsub((entityId: number) => (testValue = entityId));
+		query.onEntityRemove.unsubscribe((entityId: number) => (testValue = entityId));
 		world.removeComponent(entity1, TestComponent1);
 		expect(testValue).not.toEqual(entity1);
+	});
+	it('Auto subscribe on query create', () => {
+		const world = new World(ENTITIES_COUNT);
+		world.registerComponent(TestComponent0);
+
+		let testValueOnAdd = 0;
+		let testValueOnRemove = 0;
+
+		const onAddCallback = () => testValueOnAdd++;
+		const onRemoveCallback = () => testValueOnRemove++;
+
+		const entity0 = world.createEntity();
+		world.addComponent(entity0, new TestComponent0());
+		const entity1 = world.createEntity();
+		world.addComponent(entity1, new TestComponent0());
+
+		world.createQuery([TestComponent0], {
+			onAddCallback,
+			onRemoveCallback,
+		});
+
+		expect(testValueOnAdd).toEqual(2);
+		world.removeEntity(entity0);
+		world.removeEntity(entity1);
+		expect(testValueOnRemove).toEqual(2);
 	});
 });
