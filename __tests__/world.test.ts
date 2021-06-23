@@ -9,8 +9,9 @@ describe('World tests', () => {
 	it('World init', () => {
 		const world = new World(ENTITIES_COUNT);
 		expect(world.entitiesMax).toEqual(ENTITIES_COUNT);
-		expect(world.components.length).toEqual(ENTITIES_COUNT);
-		expect(world.masks.length).toEqual(ENTITIES_COUNT);
+		expect(world.lookupTable.length).toEqual(ENTITIES_COUNT);
+		expect(world.components).toBeDefined();
+		expect(world.masks).toBeDefined();
 		expect(world.registeredComponents).toBeDefined();
 		expect(Object.keys(world.registeredComponents).length).toEqual(0);
 	});

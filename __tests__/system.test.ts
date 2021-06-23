@@ -17,6 +17,13 @@ class TestSystem1 implements System {
 	}
 }
 
+class TestSystem2 implements System {
+	testValue: number | null = null;
+	exit() {
+		this.testValue = 12345;
+	}
+}
+
 describe('System tests', () => {
 	it('Add system', () => {
 		const world = new World(ENTITIES_COUNT);
@@ -71,5 +78,21 @@ describe('System tests', () => {
 		expect(system0.testValue).toEqual(1);
 		expect(system1.testValue).toEqual(1);
 		expect(world.systems.length).toEqual(0);
+	});
+	it('Update can be optional', () => {
+		const world = new World(ENTITIES_COUNT);
+		const system = new TestSystem2();
+		world.addSystem(system);
+		world.update(1);
+
+		expect(system.testValue).toBeNull();
+	});
+	it('Call Exit method on remove system', () => {
+		const world = new World(ENTITIES_COUNT);
+		const system = new TestSystem2();
+		world.addSystem(system);
+		expect(system.testValue).toBeNull();
+		world.removeSystem(TestSystem2);
+		expect(system.testValue).toBe(12345);
 	});
 });

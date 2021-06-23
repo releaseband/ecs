@@ -28,8 +28,11 @@ describe('Entities tests', () => {
 		const world = new World(ENTITIES_COUNT);
 		const entity = world.createEntity();
 		expect(entity).toEqual(0);
-		expect(world.lookupTable[0]).toEqual(0);
+		expect(world.lookupTable[entity]).toEqual(0);
+		expect(world.masks[entity]).toBeDefined();
 		expect(world.masks[entity].size()).toEqual(0);
+		expect(world.components[entity]).toBeDefined();
+		expect(world.components[entity].length).toEqual(0);
 	});
 	it('Create multiple entity', () => {
 		const world = new World(ENTITIES_COUNT);

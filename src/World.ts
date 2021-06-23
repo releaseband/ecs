@@ -20,8 +20,8 @@ export class World {
 		this.pool = [];
 		this.lookupTable = new Int32Array(entitiesMax).fill(-1);
 		this.entities = [];
-		this.components = new Array(entitiesMax).fill([]);
-		this.masks = new Array(entitiesMax).fill(new FastBitSet());
+		this.components = [];
+		this.masks = [];
 		this.queries = [];
 		this.registeredComponents = {};
 		this.systems = [];
@@ -36,7 +36,9 @@ export class World {
 	 */
 	getComponentIndex<T>(ctor: Constructor<T>): number {
 		const index = this.registeredComponents[ctor.cachedComponentId];
-		if (index === undefined) throw new Error(`Component ${ctor.name} is not registered`);
+		if (index === undefined) {
+			throw new Error(`Component ${ctor.name} is not registered`);
+		}
 		return index;
 	}
 
@@ -71,8 +73,8 @@ export class World {
 	 * @param onEntityRemove - will be called when entity removed from query
 	 * @returns Query object
 	 */
-	createQuery<T>(
-		components: Constructor<T>[] = [],
+	createQuery(
+		components: Constructor<unknown>[] = [],
 		options?: {
 			onAddCallback?: CallableFunction;
 			onRemoveCallback?: CallableFunction;
@@ -87,11 +89,17 @@ export class World {
 			if (query.mask.equals(mask)) return query;
 		}
 		const query = new Query(this, mask);
-		if (options?.onAddCallback) query.onEntityAdd.subscribe(options.onAddCallback);
-		if (options?.onRemoveCallback) query.onEntityRemove.subscribe(options.onRemoveCallback);
+		if (options?.onAddCallback) {
+			query.onEntityAdd.subscribe(options.onAddCallback);
+		}
+		if (options?.onRemoveCallback) {
+			query.onEntityRemove.subscribe(options.onRemoveCallback);
+		}
 		this.queries.push(query);
 		for (const entityId of this.entities.values()) {
-			if (query.mask.difference_size(this.masks[entityId]) === 0) query.add(entityId);
+			if (query.mask.difference_size(this.masks[entityId]) === 0) {
+				query.add(entityId);
+			}
 		}
 		return query;
 	}
@@ -104,7 +112,8 @@ export class World {
 	createEntity(): number {
 		const entityId = this.getNextId();
 		this.lookupTable[entityId] = this.entities.length;
-		this.masks[entityId].clear();
+		this.masks[entityId] = new FastBitSet();
+		this.components[entityId] = [];
 		this.entities.push(entityId);
 		return entityId;
 	}
@@ -147,7 +156,9 @@ export class World {
 		mask.add(componentIndex);
 		for (const query of this.queries) {
 			const diff = query.mask.difference_size(mask);
-			if (diff === 0) query.add(entityId);
+			if (diff === 0) {
+				query.add(entityId);
+			}
 		}
 	}
 
@@ -163,7 +174,9 @@ export class World {
 		this.components[entityId][componentIndex] = undefined;
 		for (const query of this.queries) {
 			const diff = query.mask.difference_size(this.masks[entityId]);
-			if (diff !== 0) query.remove(entityId);
+			if (diff !== 0) {
+				query.remove(entityId);
+			}
 		}
 	}
 
@@ -188,7 +201,7 @@ export class World {
 	 */
 	getComponent<T>(entityId: number, ctor: Constructor<T>): T {
 		const componentIndex = this.getComponentIndex(ctor);
-		return <T>this.components[entityId][componentIndex];
+		return this.components[entityId][componentIndex] as T;
 	}
 
 	/**
@@ -208,6 +221,7 @@ export class World {
 	removeSystem(ctor: Constructor<System>): void {
 		for (const [index, system] of this.systems.entries()) {
 			if (system.constructor.name === ctor.name) {
+				if (system.exit) system.exit();
 				this.systems.splice(index, 1);
 				return;
 			}
@@ -223,7 +237,7 @@ export class World {
 	 */
 	update(dt: number): void {
 		for (const system of this.systems) {
-			system.update(dt);
+			if (system.update) system.update(dt);
 		}
 	}
 }
