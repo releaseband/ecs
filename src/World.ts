@@ -69,36 +69,28 @@ export class World {
 	 * Create query
 	 *
 	 * @param components - array of components classes
-	 * @param onEntityAdd - will be called when entity added to query
-	 * @param onEntityRemove - will be called when entity removed from query
 	 * @returns Query object
 	 */
-	createQuery(
-		components: Constructor<unknown>[] = [],
-		options?: {
-			onAddCallback?: CallableFunction;
-			onRemoveCallback?: CallableFunction;
-		}
-	): Query {
+	createQuery(components: Constructor<unknown>[]): Query {
 		const indices = [];
+		const find = (mask: FastBitSet, queries: Query[]): Query | undefined => {
+			for (const query of queries.values()) {
+				if (query.mask.equals(mask)) return query;
+			}
+		};
+
 		for (const component of components) {
 			indices.push(this.getComponentIndex(component));
 		}
 		const mask = new FastBitSet(indices);
-		for (const query of this.queries.values()) {
-			if (query.mask.equals(mask)) return query;
-		}
-		const query = new Query(this, mask);
-		if (options?.onAddCallback) {
-			query.onEntityAdd.subscribe(options.onAddCallback);
-		}
-		if (options?.onRemoveCallback) {
-			query.onEntityRemove.subscribe(options.onRemoveCallback);
-		}
-		this.queries.push(query);
-		for (const entityId of this.entities.values()) {
-			if (query.mask.difference_size(this.masks[entityId]) === 0) {
-				query.add(entityId);
+		let query = find(mask, this.queries);
+		if (!query) {
+			query = new Query(this, mask);
+			this.queries.push(query);
+			for (const entityId of this.entities.values()) {
+				if (query.mask.difference_size(this.masks[entityId]) === 0) {
+					query.add(entityId);
+				}
 			}
 		}
 		return query;
@@ -119,7 +111,7 @@ export class World {
 	}
 
 	/**
-	 * Remove entity from world
+	 * Remove entity from world and from all queries
 	 *
 	 * @param entityId - entityId
 	 * @throws Will throw an error if entity does not exist
@@ -140,7 +132,7 @@ export class World {
 	}
 
 	/**
-	 * Add component object to entity
+	 * Add component object to entity and update queries
 	 *
 	 * @param entityId - entity id
 	 * @param component - component class instance
@@ -163,7 +155,7 @@ export class World {
 	}
 
 	/**
-	 * Remove component object from entity
+	 * Remove component object from entity and update queries
 	 *
 	 * @param entityId - entity id
 	 * @param ctor - component class constructor

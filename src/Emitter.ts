@@ -16,7 +16,7 @@ export class Emitter {
 	 * @param cb - Callback that you want to unsubscribe
 	 */
 	unsubscribe(cb: CallableFunction): void {
-		this.subscribers = this.subscribers.filter((callback) => callback === cb);
+		this.subscribers = this.subscribers.filter((callback) => callback !== cb);
 	}
 
 	/**

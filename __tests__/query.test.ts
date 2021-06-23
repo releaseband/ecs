@@ -152,79 +152,90 @@ describe('Query tests', () => {
 		expect(world.queries.length).toEqual(1);
 		expect(query0).toEqual(query1);
 	});
-	it('OnEntityAdd event sub/unsubscribe', () => {
+	it('OnEntityAdd event trigger check', () => {
 		const world = new World(ENTITIES_COUNT);
 		world.registerComponent(TestComponent0);
 		world.registerComponent(TestComponent1);
 
-		let testValue = null;
-
-		const testCallBack = (entityId: number) => (testValue = entityId);
-		const query = world.createQuery([TestComponent0, TestComponent1]);
-		query.onEntityAdd.subscribe(testCallBack);
+		let testValue = 0;
 
 		const entity0 = world.createEntity();
 		world.addComponent(entity0, new TestComponent0());
 		world.addComponent(entity0, new TestComponent1());
-
-		expect(testValue).toEqual(entity0);
-
-		query.onEntityAdd.unsubscribe((entityId: number) => (testValue = entityId));
-
 		const entity1 = world.createEntity();
 		world.addComponent(entity1, new TestComponent0());
-		world.addComponent(entity1, new TestComponent1());
 
-		expect(testValue).not.toEqual(entity1);
+		const testCallBack = () => testValue++;
+
+		const query = world.createQuery([TestComponent0, TestComponent1]);
+		query.onAddSubscribe(testCallBack);
+
+		expect(testValue).toEqual(1);
+		world.addComponent(entity1, new TestComponent1());
+		expect(testValue).toEqual(2);
+
+		query.onAddUnsubscribe(testCallBack);
+
+		const entity2 = world.createEntity();
+		world.addComponent(entity2, new TestComponent0());
+		world.addComponent(entity2, new TestComponent1());
+
+		expect(testValue).toEqual(2);
 	});
-	it('OnEntityRemove event sub/unsubscribe', () => {
+	it('OnEntityRemove event trigger', () => {
 		const world = new World(ENTITIES_COUNT);
 		world.registerComponent(TestComponent0);
 		world.registerComponent(TestComponent1);
 
-		let testValue = null;
-
-		const query = world.createQuery([TestComponent0, TestComponent1]);
-		query.onEntityRemove.subscribe((entityId: number) => (testValue = entityId));
+		let testValue = 0;
 
 		const entity0 = world.createEntity();
 		world.addComponent(entity0, new TestComponent0());
 		world.addComponent(entity0, new TestComponent1());
-
 		const entity1 = world.createEntity();
 		world.addComponent(entity1, new TestComponent0());
 		world.addComponent(entity1, new TestComponent1());
+		const entity2 = world.createEntity();
+		world.addComponent(entity2, new TestComponent0());
+		world.addComponent(entity2, new TestComponent1());
 
-		world.removeComponent(entity0, TestComponent1);
-		expect(testValue).toEqual(entity0);
+		const testCallBack = () => testValue++;
 
-		query.onEntityRemove.unsubscribe((entityId: number) => (testValue = entityId));
+		const query = world.createQuery([TestComponent0, TestComponent1]);
+		query.onRemoveSubscribe(testCallBack);
+
 		world.removeComponent(entity1, TestComponent1);
-		expect(testValue).not.toEqual(entity1);
+		expect(testValue).toEqual(1);
+		world.removeEntity(entity0);
+		expect(testValue).toEqual(2);
+
+		query.onRemoveUnsubscribe(testCallBack);
+
+		world.removeEntity(entity2);
+		expect(testValue).toEqual(2);
 	});
-	it('Auto subscribe on query create', () => {
+	it('Trigger onEntityAdd on subscribe,previous subscribers must not called', () => {
 		const world = new World(ENTITIES_COUNT);
 		world.registerComponent(TestComponent0);
 
-		let testValueOnAdd = 0;
-		let testValueOnRemove = 0;
+		let query0Value = 0;
+		let query1Value = 0;
 
-		const onAddCallback = () => testValueOnAdd++;
-		const onRemoveCallback = () => testValueOnRemove++;
+		const query0dCallback = () => query0Value++;
+		const query1dCallback = () => query1Value++;
+
+		const query0 = world.createQuery([TestComponent0]);
+		query0.onAddSubscribe(query0dCallback);
 
 		const entity0 = world.createEntity();
 		world.addComponent(entity0, new TestComponent0());
 		const entity1 = world.createEntity();
 		world.addComponent(entity1, new TestComponent0());
 
-		world.createQuery([TestComponent0], {
-			onAddCallback,
-			onRemoveCallback,
-		});
+		const query1 = world.createQuery([TestComponent0]);
+		query1.onAddSubscribe(query1dCallback);
 
-		expect(testValueOnAdd).toEqual(2);
-		world.removeEntity(entity0);
-		world.removeEntity(entity1);
-		expect(testValueOnRemove).toEqual(2);
+		expect(query0Value).toEqual(2);
+		expect(query1Value).toEqual(2);
 	});
 });
