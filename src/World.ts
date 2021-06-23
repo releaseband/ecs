@@ -147,9 +147,11 @@ export class World {
 		const mask = this.masks[entityId];
 		mask.add(componentIndex);
 		for (const query of this.queries) {
-			const diff = query.mask.difference_size(mask);
-			if (diff === 0) {
-				query.add(entityId);
+			if (!query.entities.has(entityId)) {
+				const diff = query.mask.difference_size(mask);
+				if (diff === 0) {
+					query.add(entityId);
+				}
 			}
 		}
 	}
@@ -165,9 +167,11 @@ export class World {
 		this.masks[entityId].remove(componentIndex);
 		this.components[entityId][componentIndex] = undefined;
 		for (const query of this.queries) {
-			const diff = query.mask.difference_size(this.masks[entityId]);
-			if (diff !== 0) {
-				query.remove(entityId);
+			if (query.entities.has(entityId)) {
+				const diff = query.mask.difference_size(this.masks[entityId]);
+				if (diff !== 0) {
+					query.remove(entityId);
+				}
 			}
 		}
 	}

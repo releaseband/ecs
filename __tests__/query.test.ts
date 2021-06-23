@@ -238,4 +238,22 @@ describe('Query tests', () => {
 		expect(query0Value).toEqual(2);
 		expect(query1Value).toEqual(2);
 	});
+	it('onEntityAdd must not trigger if entity already in query', () => {
+		const world = new World(ENTITIES_COUNT);
+		world.registerComponent(TestComponent0);
+		world.registerComponent(TestComponent1);
+
+		let queryValue = 0;
+
+		const queryCallback = () => queryValue++;
+
+		const query = world.createQuery([TestComponent0]);
+		query.onAddSubscribe(queryCallback);
+
+		const entity0 = world.createEntity();
+		world.addComponent(entity0, new TestComponent0());
+		expect(queryValue).toEqual(1);
+		world.addComponent(entity0, new TestComponent1());
+		expect(queryValue).toEqual(1);
+	});
 });
