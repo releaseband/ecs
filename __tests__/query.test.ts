@@ -256,4 +256,27 @@ describe('Query tests', () => {
 		world.addComponent(entity0, new TestComponent1());
 		expect(queryValue).toEqual(1);
 	});
+	it('Must not trigger onRemove if no entity in query', () => {
+		const world = new World(ENTITIES_COUNT);
+		world.registerComponent(TestComponent0);
+		world.registerComponent(TestComponent1);
+		world.registerComponent(TestComponent2);
+
+		let queryValue = 0;
+
+		const queryCallback = () => queryValue++;
+
+		const entity0 = world.createEntity();
+		world.addComponent(entity0, new TestComponent1());
+		const entity1 = world.createEntity();
+		world.addComponent(entity1, new TestComponent2());
+
+		const query = world.createQuery([TestComponent0]);
+		query.onRemoveSubscribe(queryCallback);
+
+		world.removeEntity(entity0);
+		expect(queryValue).toEqual(0);
+		world.removeEntity(entity1);
+		expect(queryValue).toEqual(0);
+	});
 });

@@ -127,7 +127,9 @@ export class World {
 		this.lookupTable[entityId] = -1;
 		this.pool.push(entityId);
 		for (const query of this.queries) {
-			query.remove(entityId);
+			if (query.entities.has(entityId)) {
+				query.remove(entityId);
+			}
 		}
 	}
 
