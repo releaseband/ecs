@@ -5,7 +5,6 @@
 	"main": "dist/index.js",
 	"typings": "dist/index.d.ts",
 	"scripts": {
-		"prepare": "npm run build",
 		"bench": "tsc && node ./bench/bench.js",
 		"test": "jest",
 		"build": "tsc",
