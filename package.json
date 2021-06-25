@@ -1,5 +1,5 @@
 {
-	"name": "ecs",
+	"name": "@releaseband/ecs",
 	"version": "0.1.3",
 	"description": "",
 	"main": "dist/index.js",
