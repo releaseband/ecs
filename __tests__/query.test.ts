@@ -279,4 +279,24 @@ describe('Query tests', () => {
 		world.removeEntity(entity1);
 		expect(queryValue).toEqual(0);
 	});
+	it('Component must be removed AFTER trigger query onRemove', () => {
+		const world = new World(ENTITIES_COUNT);
+		world.registerComponent(TestComponent0);
+
+		let component = undefined;
+
+		const queryCallback = (e: number) => {
+			component = world.getComponent(e, TestComponent0);
+		};
+
+		const entity = world.createEntity();
+		world.addComponent(entity, new TestComponent0());
+
+		const query = world.createQuery([TestComponent0]);
+		query.onRemoveSubscribe(queryCallback);
+
+		world.removeComponent(entity, TestComponent0);
+		expect(component).toBeDefined();
+		console.log('test', component);
+	});
 });

@@ -167,7 +167,6 @@ export class World {
 	removeComponent<T>(entityId: number, ctor: Constructor<T>): void {
 		const componentIndex = this.getComponentIndex(ctor);
 		this.masks[entityId].remove(componentIndex);
-		this.components[entityId][componentIndex] = undefined;
 		for (const query of this.queries) {
 			if (query.entities.has(entityId)) {
 				const diff = query.mask.difference_size(this.masks[entityId]);
@@ -176,6 +175,7 @@ export class World {
 				}
 			}
 		}
+		this.components[entityId][componentIndex] = undefined;
 	}
 
 	/**
