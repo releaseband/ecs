@@ -299,4 +299,28 @@ describe('Query tests', () => {
 		expect(component).toBeDefined();
 		console.log('test', component);
 	});
+	it('Must trigger onRemove/onAdd on component overwrite', () => {
+		const world = new World(ENTITIES_COUNT);
+		world.registerComponent(TestComponent0);
+
+		let queryAdd = 0;
+		let queryRemove = 0;
+
+		const queryAddCallback = () => queryAdd++;
+		const queryRemoveCallback = () => queryRemove++;
+
+		const query = world.createQuery([TestComponent0]);
+		query.onAddSubscribe(queryAddCallback);
+		query.onRemoveSubscribe(queryRemoveCallback);
+
+		const entity = world.createEntity();
+		world.addComponent(entity, new TestComponent0());
+
+		expect(queryAdd).toEqual(1);
+
+		world.addComponent(entity, new TestComponent0());
+
+		expect(queryAdd).toEqual(2);
+		expect(queryRemove).toEqual(1);
+	});
 });

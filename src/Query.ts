@@ -3,15 +3,11 @@ import { World } from './World';
 import { Emitter } from './Emitter';
 
 export class Query {
-	world: World;
-	mask: FastBitSet;
 	entities: Set<number>;
 	private onEntityAdd: Emitter;
 	private onEntityRemove: Emitter;
 
-	constructor(world: World, mask: FastBitSet) {
-		this.world = world;
-		this.mask = mask;
+	constructor(private world: World, public mask: FastBitSet) {
 		this.entities = new Set();
 		this.onEntityAdd = new Emitter();
 		this.onEntityRemove = new Emitter();

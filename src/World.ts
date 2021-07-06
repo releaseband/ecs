@@ -5,7 +5,6 @@ import { System } from './System';
 
 export class World {
 	nextId = 0;
-	entitiesMax: number;
 	pool: number[];
 	entities: number[];
 	components: Array<Array<unknown>>;
@@ -15,8 +14,7 @@ export class World {
 	registeredComponents: { [componentName: string]: number };
 	systems: System[];
 
-	constructor(entitiesMax: number) {
-		this.entitiesMax = entitiesMax;
+	constructor(public entitiesMax: number) {
 		this.pool = [];
 		this.lookupTable = new Int32Array(entitiesMax).fill(-1);
 		this.entities = [];
@@ -144,6 +142,9 @@ export class World {
 		const componentIndex = this.registeredComponents[ctor.cachedComponentId];
 		if (componentIndex === undefined) {
 			throw new Error(`Component ${ctor.name} is not registered`);
+		}
+		if (this.components[entityId][componentIndex]) {
+			this.removeComponent(entityId, ctor);
 		}
 		this.components[entityId][componentIndex] = component;
 		const mask = this.masks[entityId];
