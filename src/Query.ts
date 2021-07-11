@@ -18,11 +18,12 @@ export class Query {
 	 *
 	 * @param callback - will triggered when entity added to query
 	 */
-	onAddSubscribe(callback: CallableFunction): void {
+	onAddSubscribe(callback: CallableFunction): Query {
 		this.onEntityAdd.subscribe(callback);
 		for (const entity of this.entities) {
 			callback(entity);
 		}
+		return this;
 	}
 
 	/**
@@ -30,8 +31,9 @@ export class Query {
 	 *
 	 * @param callback - will triggered when entity removed from query
 	 */
-	onRemoveSubscribe(callback: CallableFunction): void {
+	onRemoveSubscribe(callback: CallableFunction): Query {
 		this.onEntityRemove.subscribe(callback);
+		return this;
 	}
 
 	/**
@@ -39,8 +41,9 @@ export class Query {
 	 *
 	 * @param callback - will be removed from subscribers
 	 */
-	onAddUnsubscribe(callback: CallableFunction): void {
+	onAddUnsubscribe(callback: CallableFunction): Query {
 		this.onEntityAdd.unsubscribe(callback);
+		return this;
 	}
 
 	/**
@@ -48,8 +51,9 @@ export class Query {
 	 *
 	 * @param callback - will be removed from subscribers
 	 */
-	onRemoveUnsubscribe(callback: CallableFunction): void {
+	onRemoveUnsubscribe(callback: CallableFunction): Query {
 		this.onEntityRemove.unsubscribe(callback);
+		return this;
 	}
 
 	/**

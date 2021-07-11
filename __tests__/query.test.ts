@@ -323,4 +323,18 @@ describe('Query tests', () => {
 		expect(queryAdd).toEqual(2);
 		expect(queryRemove).toEqual(1);
 	});
+	it('Query subscribe chaining', () => {
+		const world = new World(ENTITIES_COUNT);
+		world.registerComponent(TestComponent0);
+
+		let value = 0;
+		const callback = () => value++;
+		world.createQuery([TestComponent0]).onAddSubscribe(callback).onRemoveSubscribe(callback);
+
+		const entity = world.createEntity();
+		world.addComponent(entity, new TestComponent0());
+		world.removeEntity(entity);
+
+		expect(value).toEqual(2);
+	});
 });
