@@ -8,6 +8,9 @@ class TestComponent1 {}
 class TestComponent2 {}
 class TestComponent3 {}
 class TestComponent4 {}
+class TestComponent5 {
+	constructor(public value: number) {}
+}
 
 describe('Query tests', () => {
 	it('Create query', () => {
@@ -323,7 +326,7 @@ describe('Query tests', () => {
 		expect(queryAdd).toEqual(2);
 		expect(queryRemove).toEqual(1);
 	});
-	it('Query subscribe chaining', () => {
+	it('Query sub/unsub chaining', () => {
 		const world = new World(ENTITIES_COUNT);
 		world.registerComponent(TestComponent0);
 
@@ -336,5 +339,50 @@ describe('Query tests', () => {
 		world.removeEntity(entity);
 
 		expect(value).toEqual(2);
+	});
+	it('Find entity', () => {
+		const world = new World(ENTITIES_COUNT);
+		world.registerComponent(TestComponent5);
+
+		const entity0 = world.createEntity();
+		world.addComponent(entity0, new TestComponent5(1));
+		const entity1 = world.createEntity();
+		world.addComponent(entity1, new TestComponent5(2));
+		const entity2 = world.createEntity();
+		world.addComponent(entity2, new TestComponent5(3));
+
+		const query = world.createQuery([TestComponent5]);
+
+		const filteredId = query.find((entity: number) => {
+			return world.getComponent(entity, TestComponent5).value === 2;
+		});
+		const noEntityFiltered = query.find((entity: number) => {
+			return world.getComponent(entity, TestComponent5).value === 555;
+		});
+
+		expect(filteredId).toEqual(entity1);
+		expect(noEntityFiltered).toBeUndefined();
+	});
+	it('Get filtered entities', () => {
+		const world = new World(ENTITIES_COUNT);
+		world.registerComponent(TestComponent5);
+
+		const entity0 = world.createEntity();
+		world.addComponent(entity0, new TestComponent5(1));
+		const entity1 = world.createEntity();
+		world.addComponent(entity1, new TestComponent5(2));
+		const entity2 = world.createEntity();
+		world.addComponent(entity2, new TestComponent5(3));
+		const entity3 = world.createEntity();
+		world.addComponent(entity3, new TestComponent5(4));
+
+		const query = world.createQuery([TestComponent5]);
+
+		const filtered = query.filter((entity: number) => {
+			return world.getComponent(entity, TestComponent5).value > 2;
+		});
+
+		expect(filtered.length).toEqual(2);
+		expect(filtered).toEqual(expect.arrayContaining([entity2, entity3]));
 	});
 });

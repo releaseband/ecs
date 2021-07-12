@@ -2,6 +2,7 @@ import FastBitSet from 'fastbitset';
 import { World } from './World';
 import { Emitter } from './Emitter';
 
+export type Predicate = (entity: number) => boolean;
 export class Query {
 	entities: Set<number>;
 	private onEntityAdd: Emitter;
@@ -74,5 +75,33 @@ export class Query {
 	remove(entityId: number): void {
 		this.entities.delete(entityId);
 		this.onEntityRemove.emit(entityId);
+	}
+
+	/**
+	 * Find first entity that matches predicate function
+	 *
+	 * @param predicate - function that return a true|false value based on entity condition
+	 * @returns entity id
+	 */
+	find(predicate: Predicate): number | undefined {
+		for (const entity of this.entities) {
+			if (predicate(entity)) return entity;
+		}
+	}
+
+	/**
+	 * Filter entities that matches predicate function
+	 *
+	 * @param predicate - function that return a true|false value based on entity condition
+	 * @returns array of entities id
+	 */
+	filter(predicate: Predicate): number[] {
+		const filtered = [];
+		for (const entity of this.entities) {
+			if (predicate(entity)) {
+				filtered.push(entity);
+			}
+		}
+		return filtered;
 	}
 }
