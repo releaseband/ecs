@@ -20,7 +20,10 @@
 		"allowSyntheticDefaultImports": true,
 		"outDir": "dist",
 		"typeRoots": ["node_modules/@types"],
-		"stripInternal": true
+		"stripInternal": true,
+		"paths": {
+			"fastbitset": ["./node_modules/@types/fastbitset/index.d.ts"]
+		}
 	},
 	"include": ["src/**/*"],
 	"exclude": ["tests/**/*"]
