@@ -1,6 +1,6 @@
 {
 	"name": "@releaseband/ecs",
-	"version": "0.1.10",
+	"version": "0.1.11",
 	"description": "",
 	"main": "dist/index.js",
 	"typings": "dist/index.d.ts",
