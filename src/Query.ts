@@ -1,6 +1,44 @@
 import FastBitSet from 'fastbitset';
 import { World } from './World';
-import { Emitter } from './Emitter';
+
+interface Emitter {
+	subscribe(cb: CallableFunction): void;
+	unsubscribe(cb: CallableFunction): void;
+	emit<T>(arg: T): void;
+}
+
+class QueryEventsEmitter {
+	private subscribers: CallableFunction[] = [];
+
+	/**
+	 * Add subscriber for the event
+	 *
+	 * @param cb - Callback that is triggered when the event is fired
+	 */
+	subscribe(cb: CallableFunction): void {
+		this.subscribers.push(cb);
+	}
+
+	/**
+	 * Remove subscriber
+	 *
+	 * @param cb - Callback that you want to unsubscribe
+	 */
+	unsubscribe(cb: CallableFunction): void {
+		this.subscribers = this.subscribers.filter((callback) => callback !== cb);
+	}
+
+	/**
+	 * Fire event
+	 *
+	 * @param args - optional args that you want to pass to subscribers
+	 */
+	emit<T extends unknown[]>(...args: T): void {
+		for (const subscriber of this.subscribers) {
+			subscriber(...args);
+		}
+	}
+}
 
 export type Predicate = (entity: number) => boolean;
 export class Query {
@@ -10,8 +48,8 @@ export class Query {
 
 	constructor(private world: World, public mask: FastBitSet) {
 		this.entities = new Set();
-		this.onEntityAdd = new Emitter();
-		this.onEntityRemove = new Emitter();
+		this.onEntityAdd = new QueryEventsEmitter();
+		this.onEntityRemove = new QueryEventsEmitter();
 	}
 
 	/**

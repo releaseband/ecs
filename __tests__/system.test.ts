@@ -95,4 +95,20 @@ describe('System tests', () => {
 		world.removeSystem(TestSystem2);
 		expect(system.testValue).toBe(12345);
 	});
+	it('World events', () => {
+		const world = new World(ENTITIES_COUNT);
+
+		let testValue = false;
+		const callback = () => {
+			testValue = true;
+		};
+
+		world.events.on('test-event', callback);
+		expect(testValue).toEqual(false);
+		world.events.emit('test-event', true);
+		expect(testValue).toEqual(true);
+		world.events.remove('test-event', callback);
+		world.events.emit('test-event', false);
+		expect(testValue).toEqual(true);
+	});
 });

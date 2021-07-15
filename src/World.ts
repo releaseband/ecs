@@ -1,29 +1,21 @@
 import FastBitSet from 'fastbitset';
+import { EventsEmitter } from './EventsEmitter';
 import { Constructor } from './Helpers';
 import { Query } from './Query';
 import { System } from './System';
-
 export class World {
 	nextId = 0;
-	pool: number[];
-	entities: number[];
-	components: Array<Array<unknown>>;
-	masks: FastBitSet[];
-	queries: Query[];
-	lookupTable: Int32Array;
-	registeredComponents: { [componentName: string]: number };
-	systems: System[];
+	pool: number[] = [];
+	entities: number[] = [];
+	components: Array<Array<unknown>> = [];
+	masks: FastBitSet[] = [];
+	queries: Query[] = [];
+	lookupTable: Int32Array = new Int32Array(this.entitiesMax).fill(-1);
+	registeredComponents: { [componentName: string]: number } = {};
+	systems: System[] = [];
+	events: EventsEmitter = new EventsEmitter();
 
-	constructor(public entitiesMax: number) {
-		this.pool = [];
-		this.lookupTable = new Int32Array(entitiesMax).fill(-1);
-		this.entities = [];
-		this.components = [];
-		this.masks = [];
-		this.queries = [];
-		this.registeredComponents = {};
-		this.systems = [];
-	}
+	constructor(public entitiesMax: number) {}
 
 	/**
 	 *
