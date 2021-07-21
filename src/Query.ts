@@ -56,11 +56,14 @@ export class Query {
 	 * Subscribe for onEntityAdd event
 	 *
 	 * @param callback - will triggered when entity added to query
+	 * @param noEmitOnSubscribe - emit onAdd event for entities already in the queue after subscribe
 	 */
-	onAddSubscribe(callback: CallableFunction): Query {
+	onAddSubscribe(callback: CallableFunction, noEmitOnSubscribe = false): Query {
 		this.onEntityAdd.subscribe(callback);
-		for (const entity of this.entities) {
-			callback(entity);
+		if (!noEmitOnSubscribe) {
+			for (const entity of this.entities) {
+				callback(entity);
+			}
 		}
 		return this;
 	}

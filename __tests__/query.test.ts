@@ -385,4 +385,17 @@ describe('Query tests', () => {
 		expect(filtered.length).toEqual(2);
 		expect(filtered).toEqual(expect.arrayContaining([entity2, entity3]));
 	});
+	it('Not emit onAdd event for entities already in queue(optional)', () => {
+		const world = new World(ENTITIES_COUNT);
+		world.registerComponent(TestComponent0);
+		const entity0 = world.createEntity();
+		world.addComponent(entity0, new TestComponent0());
+		const entity1 = world.createEntity();
+		world.addComponent(entity1, new TestComponent0());
+
+		let value = 0;
+		world.createQuery([TestComponent0]).onAddSubscribe(() => value++, true);
+
+		expect(value).toEqual(0);
+	});
 });
