@@ -145,4 +145,14 @@ export class Query {
 		}
 		return filtered;
 	}
+
+	/**
+	 * Remove all query entities
+	 *
+	 */
+	clear(): void {
+		for (const entity of this.entities) {
+			this.remove(entity);
+		}
+	}
 }

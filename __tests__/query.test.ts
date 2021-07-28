@@ -398,4 +398,21 @@ describe('Query tests', () => {
 
 		expect(value).toEqual(0);
 	});
+	it('Clear query and fire onRemove event for all removed entities', () => {
+		const world = new World(ENTITIES_COUNT);
+		world.registerComponent(TestComponent0);
+
+		const entity0 = world.createEntity();
+		world.addComponent(entity0, new TestComponent0());
+		const entity1 = world.createEntity();
+		world.addComponent(entity1, new TestComponent0());
+		const entity2 = world.createEntity();
+		world.addComponent(entity2, new TestComponent0());
+
+		let value = 0;
+		const query = world.createQuery([TestComponent0]).onRemoveSubscribe(() => value++);
+		query.clear();
+
+		expect(value).toEqual(3);
+	});
 });
