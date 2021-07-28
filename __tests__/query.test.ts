@@ -398,7 +398,7 @@ describe('Query tests', () => {
 
 		expect(value).toEqual(0);
 	});
-	it('Clear query and fire onRemove event for all removed entities', () => {
+	it('Clear query and remove all contained entities from world', () => {
 		const world = new World(ENTITIES_COUNT);
 		world.registerComponent(TestComponent0);
 
@@ -414,5 +414,6 @@ describe('Query tests', () => {
 		query.clear();
 
 		expect(value).toEqual(3);
+		expect(world.entities.length).toEqual(0);
 	});
 });
