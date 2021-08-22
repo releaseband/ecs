@@ -184,7 +184,7 @@ describe('Entities tests', () => {
 			expect(component.value).toEqual(i);
 		});
 	});
-	it('get component before/after add', () => {
+	it('Get component before/after add', () => {
 		const world = new World(ENTITIES_COUNT);
 		world.registerComponent(TestComponent0);
 		const entity = world.createEntity();
@@ -198,7 +198,7 @@ describe('Entities tests', () => {
 		const shouldBeUndefinedAgain = world.getComponent(entity, TestComponent0);
 		expect(shouldBeUndefinedAgain).toBeUndefined();
 	});
-	it('check for entity component exist or not', () => {
+	it('Check for entity component exist or not', () => {
 		const world = new World(ENTITIES_COUNT);
 		world.registerComponent(TestComponent0);
 		const entity = world.createEntity();
@@ -206,7 +206,7 @@ describe('Entities tests', () => {
 		world.addComponent(entity, new TestComponent0());
 		expect(world.hasComponent(entity, TestComponent0)).toEqual(true);
 	});
-	it('must throw error if used non-registered component', () => {
+	it('Must throw error if used non-registered component', () => {
 		const world = new World(ENTITIES_COUNT);
 
 		const component = new TestComponent1();
@@ -214,5 +214,13 @@ describe('Entities tests', () => {
 		expect(() => world.addComponent(entity, component)).toThrow(
 			`Component ${component.constructor.name} is not registered`
 		);
+	});
+	it('Add component must return component instance', () => {
+		const world = new World(ENTITIES_COUNT);
+		world.registerComponent(TestComponent1);
+		const entity = world.createEntity();
+		const component = world.addComponent(entity, new TestComponent1(12345));
+		expect(component).toBeDefined();
+		expect(world.getComponent(entity, TestComponent1)).toEqual(component);
 	});
 });

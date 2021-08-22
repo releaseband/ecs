@@ -128,8 +128,9 @@ export class World {
 	 *
 	 * @param entityId - entity id
 	 * @param component - component class instance
+	 * @returns - component instance
 	 */
-	public addComponent<T extends unknown>(entityId: number, component: NonNullable<T>): void {
+	public addComponent<T extends unknown>(entityId: number, component: NonNullable<T>): T {
 		const ctor = Object.getPrototypeOf(component).constructor;
 		const componentIndex = this.registeredComponents[ctor.cachedComponentId];
 		if (componentIndex === undefined) {
@@ -149,6 +150,7 @@ export class World {
 				}
 			}
 		}
+		return component;
 	}
 
 	/**
