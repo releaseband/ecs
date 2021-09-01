@@ -300,7 +300,6 @@ describe('Query tests', () => {
 
 		world.removeComponent(entity, TestComponent0);
 		expect(component).toBeDefined();
-		console.log('test', component);
 	});
 	it('Must trigger onRemove/onAdd on component overwrite', () => {
 		const world = new World(ENTITIES_COUNT);

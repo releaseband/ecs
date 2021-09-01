@@ -107,7 +107,16 @@ export class World {
 	 * @throws Will throw an error if entity does not exist
 	 */
 	removeEntity(entityId: number): void {
-		if (this.lookupTable[entityId] === -1) throw new Error(`Entity ${entityId} does not exist`);
+		if (this.lookupTable[entityId] === -1) {
+			throw new Error(`Entity ${entityId} does not exist`);
+		}
+
+		for (const query of this.queries) {
+			if (query.entities.has(entityId)) {
+				query.remove(entityId);
+			}
+		}
+
 		const index = this.lookupTable[entityId];
 		const last = this.entities.pop();
 		if (last && index < this.entities.length) {
@@ -116,11 +125,6 @@ export class World {
 		}
 		this.lookupTable[entityId] = -1;
 		this.pool.push(entityId);
-		for (const query of this.queries) {
-			if (query.entities.has(entityId)) {
-				query.remove(entityId);
-			}
-		}
 	}
 
 	/**
