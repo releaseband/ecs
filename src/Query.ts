@@ -42,12 +42,12 @@ class QueryEventsEmitter {
 
 export type Predicate = (entity: number) => boolean;
 export class Query {
-	entities: Set<number>;
+	usageCounter = 0;
+	entities = new Set<number>();
 	private onEntityAdd: Emitter;
 	private onEntityRemove: Emitter;
 
 	constructor(private world: World, public mask: FastBitSet) {
-		this.entities = new Set();
 		this.onEntityAdd = new QueryEventsEmitter();
 		this.onEntityRemove = new QueryEventsEmitter();
 	}

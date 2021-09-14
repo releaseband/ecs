@@ -63,17 +63,11 @@ export class World {
 	 */
 	createQuery(components: Constructor<unknown>[]): Query {
 		const indices = [];
-		const find = (mask: FastBitSet, queries: Query[]): Query | undefined => {
-			for (const query of queries.values()) {
-				if (query.mask.equals(mask)) return query;
-			}
-		};
-
 		for (const component of components) {
 			indices.push(this.getComponentIndex(component));
 		}
 		const mask = new FastBitSet(indices);
-		let query = find(mask, this.queries);
+		let query = this.queries.find((q) => q.mask.equals(mask));
 		if (!query) {
 			query = new Query(this, mask);
 			this.queries.push(query);
@@ -83,7 +77,24 @@ export class World {
 				}
 			}
 		}
+		query.usageCounter += 1;
 		return query;
+	}
+
+	/**
+	 * Remove query
+	 *
+	 * @param query - query object to remove
+	 */
+	removeQuery(query: Query): void {
+		const index = this.queries.findIndex((q) => q === query);
+		if (index !== -1) {
+			if (query.usageCounter > 1) {
+				query.usageCounter -= 1;
+			} else {
+				this.queries.splice(index, 1);
+			}
+		}
 	}
 
 	/**
