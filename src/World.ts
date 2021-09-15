@@ -14,6 +14,7 @@ export class World {
 	registeredComponents: { [componentName: string]: number } = {};
 	systems: System[] = [];
 	events: EventsEmitter = new EventsEmitter();
+	markedEntities = new Set<number>();
 
 	constructor(public entitiesMax: number) {}
 
@@ -182,7 +183,8 @@ export class World {
 			query = new Query(this, mask);
 			this.queries.push(query);
 			for (const entityId of this.entities.values()) {
-				if (query.mask.difference_size(this.masks[entityId]) === 0) {
+				const isDeleted = this.markedEntities.has(entityId);
+				if (query.mask.difference_size(this.masks[entityId]) === 0 && !isDeleted) {
 					query.add(entityId);
 				}
 			}
@@ -232,11 +234,13 @@ export class World {
 			throw new Error(`Entity ${entityId} does not exist`);
 		}
 
+		this.markedEntities.add(entityId);
 		for (const query of this.queries) {
 			if (query.entities.has(entityId)) {
 				query.remove(entityId);
 			}
 		}
+		this.markedEntities.delete(entityId);
 
 		const index = this.lookupTable[entityId];
 		const last = this.entities.pop();

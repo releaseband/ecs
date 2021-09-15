@@ -465,4 +465,26 @@ describe('Query tests', () => {
 		}
 		expect(value).toEqual(1);
 	});
+	it('While onRemove event entity should not get into other query', () => {
+		const world = new World(ENTITIES_COUNT);
+		world.registerComponent(TestComponent0);
+		world.registerComponent(TestComponent1);
+
+		const entity0 = world.createEntity();
+		world.addComponent(entity0, new TestComponent0());
+		world.addComponent(entity0, new TestComponent1());
+
+		const entity1 = world.createEntity();
+		world.addComponent(entity1, new TestComponent0());
+		world.addComponent(entity1, new TestComponent1());
+
+		let isEntity1Exist = true;
+		const query0 = world.createQuery([TestComponent0, TestComponent1]).onRemoveSubscribe(() => {
+			world.removeQuery(query0);
+			const query1 = world.createQuery([TestComponent0, TestComponent1]);
+			isEntity1Exist = query1.entities.has(entity1);
+		});
+		world.removeEntity(entity1);
+		expect(isEntity1Exist).toBeFalsy();
+	});
 });
