@@ -1,6 +1,7 @@
 import { World } from '../src/World';
 
 const ENTITIES_COUNT = 1_000_000;
+const ENTITY_ALIVE_TAG_INDEX = 0;
 
 class TestComponent0 {
 	value: number;
@@ -30,9 +31,10 @@ describe('Entities tests', () => {
 		expect(entity).toEqual(0);
 		expect(world.lookupTable[entity]).toEqual(0);
 		expect(world.masks[entity]).toBeDefined();
-		expect(world.masks[entity].size()).toEqual(0);
+		expect(world.masks[entity].size()).toEqual(world.RESERVED_MASK_INDICES_COUNT);
 		expect(world.components[entity]).toBeDefined();
 		expect(world.components[entity].length).toEqual(0);
+		expect(world.masks[entity].has(ENTITY_ALIVE_TAG_INDEX)).toBeTruthy();
 	});
 	it('Create multiple entity', () => {
 		const world = new World(ENTITIES_COUNT);
@@ -42,7 +44,7 @@ describe('Entities tests', () => {
 		for (let i = 0; i < count; i++) {
 			const entity = world.createEntity();
 			expect(entity).toEqual(i);
-			expect(world.masks[entity].size()).toEqual(0);
+			expect(world.masks[entity].size()).toEqual(world.RESERVED_MASK_INDICES_COUNT);
 			expect(world.lookupTable[i]).not.toEqual(-1);
 			entities.push(entity);
 		}
@@ -133,7 +135,7 @@ describe('Entities tests', () => {
 			expect(world.masks[entity].has(componentIndex)).toEqual(false);
 		});
 
-		expect(world.masks[entity].size()).toEqual(0);
+		expect(world.masks[entity].size()).toEqual(world.RESERVED_MASK_INDICES_COUNT);
 	});
 	it('Get component', () => {
 		const world = new World(ENTITIES_COUNT);

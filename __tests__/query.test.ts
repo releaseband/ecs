@@ -487,4 +487,21 @@ describe('Query tests', () => {
 		world.removeEntity(entity1);
 		expect(isEntity1Exist).toBeFalsy();
 	});
+	it('Entity should not get into other query if not alive', () => {
+		const world = new World(ENTITIES_COUNT);
+		world.registerComponent(TestComponent0);
+		world.registerComponent(TestComponent1);
+
+		const entity0 = world.createEntity();
+		world.addComponent(entity0, new TestComponent0());
+
+		let isExist = true;
+		world.createQuery([TestComponent0]).onRemoveSubscribe((e: number) => {
+			const query = world.createQuery([TestComponent1]);
+			world.addComponent(e, new TestComponent1());
+			isExist = query.entities.has(entity0);
+		});
+		world.removeEntity(entity0);
+		expect(isExist).toBeFalsy();
+	});
 });

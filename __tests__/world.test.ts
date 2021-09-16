@@ -13,15 +13,18 @@ describe('World tests', () => {
 		expect(world.components).toBeDefined();
 		expect(world.masks).toBeDefined();
 		expect(world.registeredComponents).toBeDefined();
-		expect(Object.keys(world.registeredComponents).length).toEqual(0);
+		expect(Object.keys(world.registeredComponents).length).toEqual(
+			world.RESERVED_MASK_INDICES_COUNT
+		);
 	});
 	it('Register components', () => {
 		const world = new World(ENTITIES_COUNT);
+		const RESERVED_INDICES = world.RESERVED_MASK_INDICES_COUNT;
 		world.registerComponent(TestComponent0);
 		world.registerComponent(TestComponent1);
-		expect(Object.keys(world.registeredComponents).length).toEqual(2);
-		expect(world.getComponentIndex(TestComponent0)).toEqual(0);
-		expect(world.getComponentIndex(TestComponent1)).toEqual(1);
+		expect(Object.keys(world.registeredComponents).length).toEqual(RESERVED_INDICES + 2);
+		expect(world.getComponentIndex(TestComponent0)).toEqual(RESERVED_INDICES + 0);
+		expect(world.getComponentIndex(TestComponent1)).toEqual(RESERVED_INDICES + 1);
 	});
 	it('Must throw error for non-registered component', () => {
 		const world = new World(ENTITIES_COUNT);

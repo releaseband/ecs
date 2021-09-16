@@ -9,14 +9,13 @@ class TestComponent0 {}
 describe('Tags tests', () => {
 	it('Register tags', () => {
 		const world = new World(ENTITIES_COUNT);
+		const RESERVED_INDICES = world.RESERVED_MASK_INDICES_COUNT;
 		world.registerComponent(TestComponent0);
 		world.registerTags(tags);
-		expect(world.registeredComponents).toMatchObject({
-			TestComponent0: 0,
-			tag0: 1,
-			tag1: 2,
-			tag2: 3,
-		});
+		expect(world.registeredComponents.TestComponent0).toEqual(RESERVED_INDICES + 0);
+		expect(world.registeredComponents.tag0).toEqual(RESERVED_INDICES + 1);
+		expect(world.registeredComponents.tag1).toEqual(RESERVED_INDICES + 2);
+		expect(world.registeredComponents.tag2).toEqual(RESERVED_INDICES + 3);
 	});
 	it('Add,remove and has tags', () => {
 		const world = new World(ENTITIES_COUNT);

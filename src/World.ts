@@ -3,6 +3,10 @@ import { EventsEmitter } from './EventsEmitter';
 import { Constructor } from './Helpers';
 import { Query } from './Query';
 import { System } from './System';
+
+const ENTITY_ALIVE_TAG = '_reserved_entity_alive_tag_';
+const ENTITY_ALIVE_TAG_INDEX = 0;
+const RESERVED_MASK_INDICES = [ENTITY_ALIVE_TAG_INDEX];
 export class World {
 	nextId = 0;
 	pool: number[] = [];
@@ -14,9 +18,12 @@ export class World {
 	registeredComponents: { [componentName: string]: number } = {};
 	systems: System[] = [];
 	events: EventsEmitter = new EventsEmitter();
-	markedEntities = new Set<number>();
 
-	constructor(public entitiesMax: number) {}
+	RESERVED_MASK_INDICES_COUNT = RESERVED_MASK_INDICES.length;
+
+	constructor(public entitiesMax: number) {
+		this.registerTags([ENTITY_ALIVE_TAG]);
+	}
 
 	/**
 	 * Add value to mask and update queries
@@ -169,7 +176,7 @@ export class World {
 	 * @returns Query object
 	 */
 	createQuery(components: (Constructor<unknown> | string)[]): Query {
-		const indices = [];
+		const indices = [...RESERVED_MASK_INDICES];
 		for (const component of components) {
 			const index =
 				typeof component === 'string'
@@ -183,14 +190,41 @@ export class World {
 			query = new Query(this, mask);
 			this.queries.push(query);
 			for (const entityId of this.entities.values()) {
-				const isDeleted = this.markedEntities.has(entityId);
-				if (query.mask.difference_size(this.masks[entityId]) === 0 && !isDeleted) {
+				if (query.mask.difference_size(this.masks[entityId]) === 0) {
 					query.add(entityId);
 				}
 			}
 		}
 		query.usageCounter += 1;
 		return query;
+	}
+
+	/**
+	 * Remove entity from world and from all queries
+	 *
+	 * @param entityId - entityId
+	 * @throws Will throw an error if entity does not exist
+	 */
+	removeEntity(entityId: number): void {
+		if (this.lookupTable[entityId] === -1) {
+			throw new Error(`Entity ${entityId} does not exist`);
+		}
+
+		this.masks[entityId].remove(ENTITY_ALIVE_TAG_INDEX);
+		for (const query of this.queries) {
+			if (query.entities.has(entityId)) {
+				query.remove(entityId);
+			}
+		}
+
+		const index = this.lookupTable[entityId];
+		const last = this.entities.pop();
+		if (last && index < this.entities.length) {
+			this.entities[index] = last;
+			this.lookupTable[last] = index;
+		}
+		this.lookupTable[entityId] = -1;
+		this.pool.push(entityId);
 	}
 
 	/**
@@ -217,39 +251,10 @@ export class World {
 	createEntity(): number {
 		const entityId = this.getNextId();
 		this.lookupTable[entityId] = this.entities.length;
-		this.masks[entityId] = new FastBitSet();
+		this.masks[entityId] = new FastBitSet(RESERVED_MASK_INDICES);
 		this.components[entityId] = [];
 		this.entities.push(entityId);
 		return entityId;
-	}
-
-	/**
-	 * Remove entity from world and from all queries
-	 *
-	 * @param entityId - entityId
-	 * @throws Will throw an error if entity does not exist
-	 */
-	removeEntity(entityId: number): void {
-		if (this.lookupTable[entityId] === -1) {
-			throw new Error(`Entity ${entityId} does not exist`);
-		}
-
-		this.markedEntities.add(entityId);
-		for (const query of this.queries) {
-			if (query.entities.has(entityId)) {
-				query.remove(entityId);
-			}
-		}
-		this.markedEntities.delete(entityId);
-
-		const index = this.lookupTable[entityId];
-		const last = this.entities.pop();
-		if (last && index < this.entities.length) {
-			this.entities[index] = last;
-			this.lookupTable[last] = index;
-		}
-		this.lookupTable[entityId] = -1;
-		this.pool.push(entityId);
 	}
 
 	/**
