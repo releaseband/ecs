@@ -1,4 +1,4 @@
-import { World } from '../src/World';
+import { World, RESERVED_MASK_INDICES } from '../src/World';
 
 const ENTITIES_COUNT = 1_000;
 
@@ -9,7 +9,7 @@ class TestComponent0 {}
 describe('Tags tests', () => {
 	it('Register tags', () => {
 		const world = new World(ENTITIES_COUNT);
-		const RESERVED_INDICES = world.RESERVED_MASK_INDICES_COUNT;
+		const RESERVED_INDICES = RESERVED_MASK_INDICES.length;
 		world.registerComponent(TestComponent0);
 		world.registerTags(tags);
 		expect(world.registeredComponents.TestComponent0).toEqual(RESERVED_INDICES + 0);

@@ -4,9 +4,15 @@ import { Constructor } from './Helpers';
 import { Query } from './Query';
 import { System } from './System';
 
-const ENTITY_ALIVE_TAG = '_reserved_entity_alive_tag_';
-const ENTITY_ALIVE_TAG_INDEX = 0;
-const RESERVED_MASK_INDICES = [ENTITY_ALIVE_TAG_INDEX];
+export const RESERVED_TAGS = {
+	ALIVE: '_reserved_entity_alive_tag_',
+	ALIVE_INDEX: 0,
+	NAME: '_reserved_entity_name_tag_',
+	NAME_INDEX: 1,
+} as const;
+
+export const RESERVED_MASK_INDICES = [RESERVED_TAGS.ALIVE_INDEX, RESERVED_TAGS.NAME_INDEX] as const;
+
 export class World {
 	nextId = 0;
 	pool: number[] = [];
@@ -18,11 +24,10 @@ export class World {
 	registeredComponents: { [componentName: string]: number } = {};
 	systems: System[] = [];
 	events: EventsEmitter = new EventsEmitter();
-
-	RESERVED_MASK_INDICES_COUNT = RESERVED_MASK_INDICES.length;
+	names = new Map<string, number>();
 
 	constructor(public entitiesMax: number) {
-		this.registerTags([ENTITY_ALIVE_TAG]);
+		this.registerTags([RESERVED_TAGS.ALIVE, RESERVED_TAGS.NAME]);
 	}
 
 	/**
@@ -84,7 +89,7 @@ export class World {
 	 * @param entityId - entity id
 	 * @param tag - tag name
 	 */
-	hasTag(entityId: number, tag: string): boolean {
+	public hasTag(entityId: number, tag: string): boolean {
 		const tagIndex = this.getTagIndex(tag);
 		return !!this.components[entityId][tagIndex];
 	}
@@ -95,7 +100,7 @@ export class World {
 	 * @param entityId - entity id
 	 * @param tag - tag name
 	 */
-	removeTag(entityId: number, tag: string): void {
+	public removeTag(entityId: number, tag: string): void {
 		const tagIndex = this.getTagIndex(tag);
 		this.removeFromMask(entityId, tagIndex);
 	}
@@ -105,7 +110,7 @@ export class World {
 	 *
 	 * @param tags - array of tags
 	 */
-	registerTags(tags: string[]): void {
+	public registerTags(tags: string[]): void {
 		let index = Object.keys(this.registeredComponents).length;
 		tags.forEach((tag) => {
 			if (!this.registeredComponents[tag]) {
@@ -151,7 +156,7 @@ export class World {
 	 *
 	 * @param component - component constructor
 	 */
-	registerComponent<T>(ctor: Constructor<T>): void {
+	public registerComponent<T>(ctor: Constructor<T>): void {
 		if (!this.registeredComponents[ctor.name]) {
 			ctor.cachedComponentId = ctor.name;
 			const index = Object.keys(this.registeredComponents).length;
@@ -175,8 +180,8 @@ export class World {
 	 * @param components - array of components classes
 	 * @returns Query object
 	 */
-	createQuery(components: (Constructor<unknown> | string)[]): Query {
-		const indices = [...RESERVED_MASK_INDICES];
+	public createQuery(components: (Constructor<unknown> | string)[]): Query {
+		const indices: number[] = [...RESERVED_MASK_INDICES];
 		for (const component of components) {
 			const index =
 				typeof component === 'string'
@@ -200,39 +205,11 @@ export class World {
 	}
 
 	/**
-	 * Remove entity from world and from all queries
-	 *
-	 * @param entityId - entityId
-	 * @throws Will throw an error if entity does not exist
-	 */
-	removeEntity(entityId: number): void {
-		if (this.lookupTable[entityId] === -1) {
-			throw new Error(`Entity ${entityId} does not exist`);
-		}
-
-		this.masks[entityId].remove(ENTITY_ALIVE_TAG_INDEX);
-		for (const query of this.queries) {
-			if (query.entities.has(entityId)) {
-				query.remove(entityId);
-			}
-		}
-
-		const index = this.lookupTable[entityId];
-		const last = this.entities.pop();
-		if (last && index < this.entities.length) {
-			this.entities[index] = last;
-			this.lookupTable[last] = index;
-		}
-		this.lookupTable[entityId] = -1;
-		this.pool.push(entityId);
-	}
-
-	/**
 	 * Remove query
 	 *
 	 * @param query - query object to remove
 	 */
-	removeQuery(query: Query): void {
+	public removeQuery(query: Query): void {
 		const index = this.queries.findIndex((q) => q === query);
 		if (index !== -1) {
 			if (query.usageCounter > 1) {
@@ -244,17 +221,63 @@ export class World {
 	}
 
 	/**
+	 * @param name - entity name
+	 * @returns entity id
+	 */
+	public getEntity(name: string): number | undefined {
+		return this.names.get(name);
+	}
+
+	/**
 	 * Create entity
 	 *
 	 * @returns entity id
 	 */
-	createEntity(): number {
+	public createEntity(entityName?: string): number {
 		const entityId = this.getNextId();
+		if (entityName && this.names.has(entityName)) {
+			throw new Error(`Entity with name ${entityName} already exist`);
+		}
+		const name = entityName ? entityName : entityId.toString();
 		this.lookupTable[entityId] = this.entities.length;
 		this.masks[entityId] = new FastBitSet(RESERVED_MASK_INDICES);
 		this.components[entityId] = [];
+		this.components[entityId][RESERVED_TAGS.ALIVE_INDEX] = RESERVED_TAGS.ALIVE;
+		this.components[entityId][RESERVED_TAGS.NAME_INDEX] = name;
+		this.names.set(name, entityId);
 		this.entities.push(entityId);
 		return entityId;
+	}
+
+	/**
+	 * Remove entity from world and from all queries
+	 *
+	 * @param entityId - entityId
+	 * @throws Will throw an error if entity does not exist
+	 */
+	public removeEntity(entityId: number): void {
+		if (this.lookupTable[entityId] === -1) {
+			throw new Error(`Entity ${entityId} does not exist`);
+		}
+
+		this.masks[entityId].remove(RESERVED_TAGS.ALIVE_INDEX);
+		for (const query of this.queries) {
+			if (query.entities.has(entityId)) {
+				query.remove(entityId);
+			}
+		}
+		const name = this.components[entityId][RESERVED_TAGS.NAME_INDEX] as string;
+		this.names.delete(name);
+		this.components[entityId] = [];
+		this.masks[entityId].clear();
+		const index = this.lookupTable[entityId];
+		const last = this.entities.pop();
+		if (last && index < this.entities.length) {
+			this.entities[index] = last;
+			this.lookupTable[last] = index;
+		}
+		this.lookupTable[entityId] = -1;
+		this.pool.push(entityId);
 	}
 
 	/**
@@ -281,7 +304,7 @@ export class World {
 	 * @param entityId - entity id
 	 * @param ctor - component class constructor
 	 */
-	removeComponent<T>(entityId: number, ctor: Constructor<T>): void {
+	public removeComponent<T>(entityId: number, ctor: Constructor<T>): void {
 		const componentIndex = this.getComponentIndex(ctor);
 		this.removeFromMask(entityId, componentIndex);
 	}
@@ -293,7 +316,7 @@ export class World {
 	 * @param ctor - class constructor
 	 * @returns true if component exist,or false if not
 	 */
-	hasComponent<T>(entityId: number, ctor: Constructor<T>): boolean {
+	public hasComponent<T>(entityId: number, ctor: Constructor<T>): boolean {
 		const componentIndex = this.getComponentIndex(ctor);
 		return !!this.components[entityId][componentIndex];
 	}
@@ -305,7 +328,7 @@ export class World {
 	 * @param ctor - component class constructor
 	 * @returns component class instance
 	 */
-	getComponent<T>(entityId: number, ctor: Constructor<T>): T {
+	public getComponent<T>(entityId: number, ctor: Constructor<T>): T {
 		const componentIndex = this.getComponentIndex(ctor);
 		return this.components[entityId][componentIndex] as T;
 	}
@@ -315,7 +338,7 @@ export class World {
 	 *
 	 * @param system - system class instance
 	 */
-	addSystem(system: System): void {
+	public addSystem(system: System): void {
 		this.systems.push(system);
 	}
 
@@ -324,7 +347,7 @@ export class World {
 	 *
 	 * @param ctor - system class constructor
 	 */
-	removeSystem(ctor: Constructor<System>): void {
+	public removeSystem(ctor: Constructor<System>): void {
 		for (const [index, system] of this.systems.entries()) {
 			if (system.constructor.name === ctor.name) {
 				if (system.exit) system.exit();
@@ -341,7 +364,7 @@ export class World {
 	 *
 	 * @param dt - delta time
 	 */
-	update(dt: number): void {
+	public update(dt: number): void {
 		for (const system of this.systems) {
 			if (system.update) system.update(dt);
 		}
