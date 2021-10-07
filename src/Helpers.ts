@@ -1,7 +1,7 @@
 declare global {
-	interface Object {
-		cachedComponentId: string;
-	}
+  interface Object {
+    cachedComponentId: string;
+  }
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
