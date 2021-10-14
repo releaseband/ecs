@@ -1,28 +1,7 @@
-import { System } from '../src/System';
 import { World } from '../src/World';
+import { TestSystem0, TestSystem1, TestSystem2 } from './util/systems';
 
 const ENTITIES_COUNT = 1_000_000;
-
-class TestSystem0 implements System {
-  testValue: number | null = null;
-  update(dt: number): void {
-    this.testValue = dt;
-  }
-}
-
-class TestSystem1 implements System {
-  testValue: number | null = null;
-  update(dt: number): void {
-    this.testValue = dt;
-  }
-}
-
-class TestSystem2 implements System {
-  testValue: number | null = null;
-  exit() {
-    this.testValue = 12345;
-  }
-}
 
 describe('System tests', () => {
   it('Add system', () => {
@@ -84,10 +63,9 @@ describe('System tests', () => {
     const system = new TestSystem2();
     world.addSystem(system);
     world.update(1);
-
     expect(system.testValue).toBeNull();
   });
-  it('Call Exit method on remove system', () => {
+  it('Should call Exit method if system removed', () => {
     const world = new World(ENTITIES_COUNT);
     const system = new TestSystem2();
     world.addSystem(system);
@@ -95,20 +73,14 @@ describe('System tests', () => {
     world.removeSystem(TestSystem2);
     expect(system.testValue).toBe(12345);
   });
-  it('World events', () => {
+  it('Remove all systems from world', () => {
     const world = new World(ENTITIES_COUNT);
-
-    let testValue = false;
-    const callback = () => {
-      testValue = true;
-    };
-
-    world.events.on('test-event', callback);
-    expect(testValue).toEqual(false);
-    world.events.emit('test-event', true);
-    expect(testValue).toEqual(true);
-    world.events.remove('test-event', callback);
-    world.events.emit('test-event', false);
-    expect(testValue).toEqual(true);
+    const systemWithExit = new TestSystem2();
+    world.addSystem(new TestSystem0());
+    world.addSystem(new TestSystem1());
+    world.addSystem(systemWithExit);
+    world.removeAllSystems();
+    expect(world.systems).toHaveLength(0);
+    expect(systemWithExit.testValue).toEqual(12345);
   });
 });

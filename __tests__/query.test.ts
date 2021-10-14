@@ -1,33 +1,22 @@
 import { Query } from '../src/Query';
 import { World } from '../src/World';
 
+import {
+  TestComponent0,
+  TestComponent1,
+  TestComponent2,
+  TestComponent3,
+  TestComponent4,
+  TestComponent5,
+} from './util/components';
+import { createEntities } from './util/helpers';
+
 const ENTITIES_COUNT = 1_000_000;
-
-class TestComponent0 {}
-class TestComponent1 {}
-class TestComponent2 {}
-class TestComponent3 {}
-class TestComponent4 {}
-class TestComponent5 {
-  constructor(public value: number) {}
-}
-
-const createTestEntities = (world: World, amount: number): Array<number> => {
-  const entities = Array<number>();
-  for (let i = 0; i < amount; i += 1) {
-    const entity = world.createEntity();
-    world.addComponent(entity, new TestComponent0());
-    world.addComponent(entity, new TestComponent1());
-    entities.push(entity);
-  }
-  return entities;
-};
 
 describe('Query tests', () => {
   it('Create query', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
-
     const query = world.createQuery([TestComponent0]);
     const componentIndex = world.getComponentIndex(TestComponent0);
     expect(query).toBeDefined();
@@ -522,12 +511,11 @@ describe('Query tests', () => {
     let removedEntities = 0;
     world.registerComponent(TestComponent0);
     world.registerComponent(TestComponent1);
-    world
-      .createQuery([TestComponent0, TestComponent1])
-      .onRemoveSubscribe(() => {
-        removedEntities++;
-      });
-    createTestEntities(world, TEST_ENTITIES_AMOUNT);
+    const ctors = [TestComponent0, TestComponent1];
+    world.createQuery(ctors).onRemoveSubscribe(() => {
+      removedEntities++;
+    });
+    createEntities(world, ctors, TEST_ENTITIES_AMOUNT);
     world.clear();
     expect(removedEntities).toEqual(TEST_ENTITIES_AMOUNT);
   });
@@ -536,22 +524,24 @@ describe('Query tests', () => {
     let isEmptyTriggerCount = 0;
     world.registerComponent(TestComponent0);
     world.registerComponent(TestComponent1);
-    world.createQuery([TestComponent0, TestComponent1]).onEmptySubscribe(() => {
+    const ctors = [TestComponent0, TestComponent1];
+    world.createQuery(ctors).onEmptySubscribe(() => {
       isEmptyTriggerCount += 1;
     });
-    createTestEntities(world, 100);
+    createEntities(world, ctors, 100);
     world.clear();
     expect(isEmptyTriggerCount).toEqual(1);
   });
   it('All Once methods should remove callbacks after was triggered', () => {
     const world = new World(ENTITIES_COUNT);
+    const ctors = [TestComponent0, TestComponent1];
     let onEmptyTriggerCount = 0;
     let onAddTriggerCount = 0;
     let onRemoveTriggerCount = 0;
     world.registerComponent(TestComponent0);
     world.registerComponent(TestComponent1);
     world
-      .createQuery([TestComponent0, TestComponent1])
+      .createQuery(ctors)
       .onEmptyOnceSubscribe(() => {
         onEmptyTriggerCount += 1;
       })
@@ -561,10 +551,31 @@ describe('Query tests', () => {
       .onRemoveOnceSubscribe(() => {
         onRemoveTriggerCount += 1;
       });
-    createTestEntities(world, 100);
+    createEntities(world, ctors, 100);
     world.clear();
     expect(onEmptyTriggerCount).toEqual(1);
     expect(onAddTriggerCount).toEqual(1);
     expect(onRemoveTriggerCount).toEqual(1);
+  });
+  describe('Should remove query if empty and removeOnEmpty flag provided', () => {
+    const world = new World(ENTITIES_COUNT);
+    world.registerComponent(TestComponent0);
+    world.registerComponent(TestComponent1);
+    const ctors = [TestComponent0, TestComponent1];
+
+    it('on components remove', () => {
+      world.createQuery(ctors, true);
+      const entities = createEntities(world, ctors, 50);
+      entities.forEach((entity) =>
+        world.removeComponent(entity, TestComponent0)
+      );
+      expect(world.queries).toHaveLength(0);
+    });
+    it('on entities remove', () => {
+      world.createQuery(ctors, true);
+      createEntities(world, ctors, 50);
+      world.clear();
+      expect(world.queries).toHaveLength(0);
+    });
   });
 });

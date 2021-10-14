@@ -22,10 +22,10 @@ export class World {
   entities = Array<number>();
   components: Array<Array<unknown>> = [];
   masks: FastBitSet[] = [];
-  queries: Query[] = [];
+  queries = Array<Query>();
   lookupTable: Int32Array = new Int32Array(this.entitiesMax).fill(-1);
   registeredComponents: { [componentName: string]: number } = {};
-  systems: System[] = [];
+  systems = Array<System>();
   events: EventsEmitter = new EventsEmitter();
   names = new Map<string, number>();
 
@@ -65,6 +65,9 @@ export class World {
         const diff = query.mask.difference_size(this.masks[entityId]);
         if (diff !== 0) {
           query.remove(entityId);
+        }
+        if (query.removeOnEmpty && !query.entities.size) {
+          this.removeQuery(query);
         }
       }
     }
@@ -178,12 +181,11 @@ export class World {
   }
 
   /**
-   * Create query
    *
-   * @param components - array of components classes
-   * @returns Query object
+   * @param components - array of components ctors or tags
+   * @returns mask
    */
-  public createQuery(components: (Constructor<unknown> | string)[]): Query {
+  private getMask(components: (Constructor<unknown> | string)[]): FastBitSet {
     const indices: number[] = [...RESERVED_MASK_INDICES];
     for (const component of components) {
       const index =
@@ -192,10 +194,38 @@ export class World {
           : this.getComponentIndex(component);
       indices.push(index);
     }
-    const mask = new FastBitSet(indices);
+    return new FastBitSet(indices);
+  }
+
+  /**
+   * Query entities
+   *
+   * @param components - array of components ctors or tags
+   * @returns array of entities filtered by mask
+   */
+  public queryEntities(
+    components: (Constructor<unknown> | string)[]
+  ): Array<number> {
+    const mask = this.getMask(components);
+    const isEqual = (entityId: number) =>
+      mask.difference_size(this.masks[entityId]) === 0;
+    return this.entities.filter(isEqual);
+  }
+
+  /**
+   * Create query
+   *
+   * @param components - array of components ctors or tags
+   * @returns Query object
+   */
+  public createQuery(
+    components: (Constructor<unknown> | string)[],
+    removeOnEmpty = false
+  ): Query {
+    const mask = this.getMask(components);
     let query = this.queries.find((q) => q.mask.equals(mask));
     if (!query) {
-      query = new Query(this, mask);
+      query = new Query(this, mask, removeOnEmpty);
       this.queries.push(query);
       for (const entityId of this.entities.values()) {
         if (query.mask.difference_size(this.masks[entityId]) === 0) {
@@ -238,6 +268,9 @@ export class World {
    */
   public createEntity(entityName?: string): number {
     const entityId = this.getNextId();
+    if (entityId >= this.entitiesMax) {
+      throw new Error(`Entities limit reached`);
+    }
     if (entityName && this.names.has(entityName)) {
       throw new Error(`Entity with name ${entityName} already exist`);
     }
@@ -264,7 +297,7 @@ export class World {
    *
    * @param entities - array of entities to remove
    */
-  public removeEntities(entities: Array<number>): void {
+  public removeEntities(entities: Array<number> | Set<number>): void {
     entities.forEach((entityId: number) => this.removeEntity(entityId));
   }
 
@@ -283,6 +316,9 @@ export class World {
     for (const query of this.queries) {
       if (query.entities.has(entityId)) {
         query.remove(entityId);
+        if (query.removeOnEmpty && !query.entities.size) {
+          this.removeQuery(query);
+        }
       }
     }
     const name = this.components[entityId][RESERVED_TAGS.NAME_INDEX] as string;
@@ -377,6 +413,28 @@ export class World {
         return;
       }
     }
+  }
+
+  /**
+   * Remove all systems from world
+   */
+  public removeAllSystems(): void {
+    this.systems.forEach((system) => {
+      if (system.exit) system.exit();
+    });
+    this.systems.length = 0;
+  }
+
+  /**
+   * destroy whole world:
+   * - remove all entities
+   * - call exit for all systems
+   * - remove systems
+   */
+  public destroy(): void {
+    this.clear();
+    this.queries.length = 0;
+    this.removeAllSystems();
   }
 
   /**

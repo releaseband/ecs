@@ -1,10 +1,10 @@
 import { World, RESERVED_MASK_INDICES } from '../src/World';
+import { TestComponent0, TestComponent1 } from './util/components';
+import { createEntities } from './util/helpers';
+import { TestSystem0, TestSystem2 } from './util/systems';
 
 const ENTITIES_COUNT = 1_000_000;
 const TEST_ENTITIES_AMOUNT = 500;
-
-class TestComponent0 {}
-class TestComponent1 {}
 
 describe('World tests', () => {
   it('World init', () => {
@@ -17,6 +17,26 @@ describe('World tests', () => {
     expect(Object.keys(world.registeredComponents).length).toEqual(
       RESERVED_MASK_INDICES.length
     );
+  });
+  it('Should throw error if entities limit is exceeded', () => {
+    {
+      const world = new World(0);
+      expect(() => world.createEntity()).toThrowError();
+    }
+    {
+      const world = new World(1);
+      world.createEntity();
+      expect(() => world.createEntity()).toThrowError();
+    }
+    {
+      const AMOUNT = 50;
+      const world = new World(AMOUNT);
+      expect(() => {
+        for (let i = 0; i < AMOUNT + 1; i++) {
+          world.createEntity();
+        }
+      }).toThrowError();
+    }
   });
   it('Register components', () => {
     const world = new World(ENTITIES_COUNT);
@@ -42,16 +62,11 @@ describe('World tests', () => {
   });
   it('removeEntities should remove array of entities', () => {
     const world = new World(ENTITIES_COUNT);
-    const entities = Array<number>();
     world.registerComponent(TestComponent0);
     world.registerComponent(TestComponent1);
+    const ctors = [TestComponent0, TestComponent1];
 
-    for (let i = 0; i < TEST_ENTITIES_AMOUNT; i += 1) {
-      const entity = world.createEntity();
-      world.addComponent(entity, new TestComponent0());
-      world.addComponent(entity, new TestComponent1());
-      entities.push(entity);
-    }
+    const entities = createEntities(world, ctors, TEST_ENTITIES_AMOUNT);
 
     expect(world.entities).toHaveLength(TEST_ENTITIES_AMOUNT);
     expect(entities).toHaveLength(TEST_ENTITIES_AMOUNT);
@@ -63,16 +78,79 @@ describe('World tests', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
     world.registerComponent(TestComponent1);
+    const ctors = [TestComponent0, TestComponent1];
 
-    for (let i = 0; i < TEST_ENTITIES_AMOUNT; i += 1) {
-      const entity = world.createEntity();
-      world.addComponent(entity, new TestComponent0());
-      world.addComponent(entity, new TestComponent1());
-    }
+    createEntities(world, ctors, TEST_ENTITIES_AMOUNT);
 
     expect(world.entities).toHaveLength(TEST_ENTITIES_AMOUNT);
     world.clear();
     expect(world.entities).toHaveLength(0);
     expect(world.pool).toHaveLength(TEST_ENTITIES_AMOUNT);
+  });
+  it('World events', () => {
+    const world = new World(ENTITIES_COUNT);
+
+    let testValue = false;
+    const callback = () => {
+      testValue = true;
+    };
+
+    world.events.on('test-event', callback);
+    expect(testValue).toEqual(false);
+    world.events.emit('test-event', true);
+    expect(testValue).toEqual(true);
+    world.events.remove('test-event', callback);
+    world.events.emit('test-event', false);
+    expect(testValue).toEqual(true);
+  });
+  it('Can delete entities contained in the query object', () => {
+    const world = new World(ENTITIES_COUNT);
+    world.registerComponent(TestComponent0);
+    world.registerComponent(TestComponent1);
+    const ctors = [TestComponent0, TestComponent1];
+    const query = world.createQuery(ctors);
+
+    createEntities(world, ctors, TEST_ENTITIES_AMOUNT);
+
+    expect(world.entities).toHaveLength(TEST_ENTITIES_AMOUNT);
+    expect(query.entities.size).toEqual(TEST_ENTITIES_AMOUNT);
+    world.removeEntities(query.entities);
+    expect(query.entities.size).toEqual(0);
+    expect(world.entities).toHaveLength(0);
+    expect(world.pool).toHaveLength(TEST_ENTITIES_AMOUNT);
+  });
+  it('Destroy whole world', () => {
+    const world = new World(ENTITIES_COUNT);
+    world.registerComponent(TestComponent0);
+    world.registerComponent(TestComponent1);
+    const ctors = [TestComponent0, TestComponent1];
+    const query = world.createQuery(ctors);
+    world.addSystem(new TestSystem0());
+    world.addSystem(new TestSystem2());
+
+    createEntities(world, ctors, TEST_ENTITIES_AMOUNT);
+
+    world.destroy();
+    expect(query.entities.size).toEqual(0);
+    expect(world.systems).toHaveLength(0);
+    expect(world.entities).toHaveLength(0);
+    expect(world.queries).toHaveLength(0);
+  });
+  it('Query filtered array of entities', () => {
+    const world = new World(ENTITIES_COUNT);
+    const TAG0 = 'test0';
+    const TAG1 = 'test1';
+    world.registerComponent(TestComponent0);
+    world.registerComponent(TestComponent1);
+    world.registerTags([TAG0, TAG1]);
+    const ctors0 = [TestComponent0];
+    const ctors1 = [TestComponent0, TAG0];
+    const entities0 = createEntities(world, ctors0, TEST_ENTITIES_AMOUNT);
+    const entities1 = createEntities(world, ctors1, TEST_ENTITIES_AMOUNT);
+    expect(entities0).toHaveLength(TEST_ENTITIES_AMOUNT);
+    expect(entities1).toHaveLength(TEST_ENTITIES_AMOUNT);
+    expect(world.queryEntities(ctors0)).toHaveLength(TEST_ENTITIES_AMOUNT * 2);
+    expect(world.queryEntities(ctors1)).toHaveLength(TEST_ENTITIES_AMOUNT);
+    expect(world.queryEntities([TAG1])).toHaveLength(0);
   });
 });

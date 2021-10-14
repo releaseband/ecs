@@ -51,7 +51,11 @@ export class Query {
   private onEntityRemove = new QueryEventsEmitter();
   private onEmpty = new QueryEventsEmitter();
 
-  constructor(private world: World, public mask: FastBitSet) {}
+  constructor(
+    private world: World,
+    public mask: FastBitSet,
+    public removeOnEmpty: boolean
+  ) {}
 
   /**
    * Subscribe for onEntityAdd event
