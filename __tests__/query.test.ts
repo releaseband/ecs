@@ -577,5 +577,15 @@ describe('Query tests', () => {
       world.clear();
       expect(world.queries).toHaveLength(0);
     });
+    it('should be removed before events', () => {
+      createEntities(world, ctors, 50);
+      let isQueryRemoved = false;
+      world.createQuery(ctors, true).onEmptyOnceSubscribe(() => {
+        isQueryRemoved = world.queries.length === 0;
+      });
+      world.clear();
+      expect(isQueryRemoved).toBeTruthy();
+      expect(world.queries).toHaveLength(0);
+    });
   });
 });

@@ -64,10 +64,10 @@ export class World {
       if (query.entities.has(entityId)) {
         const diff = query.mask.difference_size(this.masks[entityId]);
         if (diff !== 0) {
+          if (query.removeOnEmpty && query.entities.size === 1) {
+            this.removeQuery(query);
+          }
           query.remove(entityId);
-        }
-        if (query.removeOnEmpty && !query.entities.size) {
-          this.removeQuery(query);
         }
       }
     }
@@ -315,10 +315,10 @@ export class World {
     this.masks[entityId].remove(RESERVED_TAGS.ALIVE_INDEX);
     for (const query of this.queries) {
       if (query.entities.has(entityId)) {
-        query.remove(entityId);
-        if (query.removeOnEmpty && !query.entities.size) {
+        if (query.removeOnEmpty && query.entities.size === 1) {
           this.removeQuery(query);
         }
+        query.remove(entityId);
       }
     }
     const name = this.components[entityId][RESERVED_TAGS.NAME_INDEX] as string;
