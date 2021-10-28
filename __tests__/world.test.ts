@@ -53,12 +53,17 @@ describe('World tests', () => {
       RESERVED_INDICES + 1
     );
   });
-  it('Must throw error for non-registered component', () => {
+  it('Should throw error for non-registered component', () => {
     const world = new World(ENTITIES_COUNT);
 
     expect(() => world.getComponentIndex(TestComponent0)).toThrow(
       `Component ${TestComponent0.name} is not registered`
     );
+  });
+  it('Should throw error for already registered component', () => {
+    const world = new World(ENTITIES_COUNT);
+    world.registerComponent(TestComponent0);
+    expect(() => world.registerComponent(TestComponent0)).toThrowError();
   });
   it('removeEntities should remove array of entities', () => {
     const world = new World(ENTITIES_COUNT);
@@ -152,5 +157,25 @@ describe('World tests', () => {
     expect(world.queryEntities(ctors0)).toHaveLength(TEST_ENTITIES_AMOUNT * 2);
     expect(world.queryEntities(ctors1)).toHaveLength(TEST_ENTITIES_AMOUNT);
     expect(world.queryEntities([TAG1])).toHaveLength(0);
+  });
+  describe('Check is entity exist or not', () => {
+    const world = new World(ENTITIES_COUNT);
+    const entity0 = world.createEntity();
+    const entity1 = world.createEntity();
+    const entity2 = world.createEntity();
+    world.removeEntity(entity0);
+
+    it('Should return true if exist,or false if not', () => {
+      expect(world.hasEntity(entity0)).toBeFalsy();
+      expect(world.hasEntity(555)).toBeFalsy();
+      expect(world.hasEntity(entity1)).toBeTruthy();
+      expect(world.hasEntity(entity2)).toBeTruthy();
+    });
+    it('Should throw error if entity does not exist and throwError flag is set', () => {
+      expect(() => world.hasEntity(entity0, true)).toThrowError();
+      expect(() => world.hasEntity(555, true)).toThrowError();
+      expect(world.hasEntity(entity1, true)).toBeTruthy();
+      expect(world.hasEntity(entity2, true)).toBeTruthy();
+    });
   });
 });

@@ -284,4 +284,30 @@ describe('Entities tests', () => {
     expect(component).toBeDefined();
     expect(world.getComponent(entity, TestComponent1)).toEqual(component);
   });
+  it('Should throw error if entity does not exist', () => {
+    const world = new World(ENTITIES_COUNT);
+    const TAG = 'tag';
+    world.registerComponent(TestComponent0);
+    world.registerTags([TAG]);
+
+    const entity = 555;
+    const errorMsg = `Entity ${entity} does not exist`;
+
+    expect(() => world.hasTag(entity, TAG)).toThrowError(errorMsg);
+    expect(() => world.addTag(entity, TAG)).toThrowError(errorMsg);
+    expect(() => world.removeTag(entity, TAG)).toThrowError(errorMsg);
+
+    expect(() => world.hasComponent(entity, TestComponent0)).toThrowError(
+      errorMsg
+    );
+    expect(() => world.getComponent(entity, TestComponent0)).toThrowError(
+      errorMsg
+    );
+    expect(() => world.addComponent(entity, new TestComponent0())).toThrowError(
+      errorMsg
+    );
+    expect(() => world.addComponent(entity, new TestComponent0())).toThrowError(
+      errorMsg
+    );
+  });
 });

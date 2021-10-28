@@ -20,8 +20,8 @@ export class World {
   nextId = 0;
   pool = Array<number>();
   entities = Array<number>();
-  components: Array<Array<unknown>> = [];
-  masks: FastBitSet[] = [];
+  components = Array<Array<unknown>>();
+  masks = Array<FastBitSet>();
   queries = Array<Query>();
   lookupTable: Int32Array = new Int32Array(this.entitiesMax).fill(-1);
   registeredComponents: { [componentName: string]: number } = {};
@@ -71,7 +71,9 @@ export class World {
         }
       }
     }
-    this.components[entityId][index] = undefined;
+    if (!this.masks[entityId].has(index)) {
+      this.components[entityId][index] = undefined;
+    }
   }
 
   /**
@@ -81,6 +83,7 @@ export class World {
    * @param tag - tag name
    */
   public addTag(entityId: number, tag: string): void {
+    this.hasEntity(entityId, true);
     const tagIndex = this.getTagIndex(tag);
     if (this.components[entityId][tagIndex]) {
       this.removeTag(entityId, tag);
@@ -96,6 +99,7 @@ export class World {
    * @param tag - tag name
    */
   public hasTag(entityId: number, tag: string): boolean {
+    this.hasEntity(entityId, true);
     const tagIndex = this.getTagIndex(tag);
     return !!this.components[entityId][tagIndex];
   }
@@ -107,23 +111,9 @@ export class World {
    * @param tag - tag name
    */
   public removeTag(entityId: number, tag: string): void {
+    this.hasEntity(entityId, true);
     const tagIndex = this.getTagIndex(tag);
     this.removeFromMask(entityId, tagIndex);
-  }
-
-  /**
-   * Register tags
-   *
-   * @param tags - array of tags
-   */
-  public registerTags(tags: string[]): void {
-    let index = Object.keys(this.registeredComponents).length;
-    tags.forEach((tag) => {
-      if (!this.registeredComponents[tag]) {
-        this.registeredComponents[tag] = index;
-        index += 1;
-      }
-    });
   }
 
   /**
@@ -161,13 +151,31 @@ export class World {
    * Register component class
    *
    * @param component - component constructor
+   * @throws error if component already added
    */
   public registerComponent<T>(ctor: Constructor<T>): void {
-    if (!this.registeredComponents[ctor.name]) {
-      ctor.cachedComponentId = ctor.name;
-      const index = Object.keys(this.registeredComponents).length;
-      this.registeredComponents[ctor.name] = index;
+    if (this.registeredComponents[ctor.name]) {
+      throw Error(`Component ${ctor.name} already registered`);
     }
+    ctor.cachedComponentId = ctor.name;
+    const index = Object.keys(this.registeredComponents).length;
+    this.registeredComponents[ctor.name] = index;
+  }
+
+  /**
+   * Register tags
+   *
+   * @param tags - array of tags
+   */
+  public registerTags(tags: string[]): void {
+    let index = Object.keys(this.registeredComponents).length;
+    tags.forEach((tag) => {
+      if (this.registeredComponents[tag]) {
+        throw Error(`Tag ${tag} already registered`);
+      }
+      this.registeredComponents[tag] = index;
+      index += 1;
+    });
   }
 
   /**
@@ -304,14 +312,11 @@ export class World {
   /**
    * Remove entity from world and from all queries
    *
-   * @param entityId - entityId
-   * @throws Will throw an error if entity does not exist
+   * @param entityId - entity id
+   * @throws will throw an error if entity does not exist
    */
   public removeEntity(entityId: number): void {
-    if (this.lookupTable[entityId] === -1) {
-      throw new Error(`Entity ${entityId} does not exist`);
-    }
-
+    this.hasEntity(entityId, true);
     this.masks[entityId].remove(RESERVED_TAGS.ALIVE_INDEX);
     for (const query of this.queries) {
       if (query.entities.has(entityId)) {
@@ -336,20 +341,36 @@ export class World {
   }
 
   /**
+   *
+   * @param entityId - entity id
+   * @param throwError - throw error if does not exist
+   * @returns is entity exist
+   */
+  public hasEntity(entityId: number, throwError = false): boolean {
+    const isExist = this.lookupTable[entityId] !== -1;
+    if (throwError && !isExist) {
+      throw Error(`Entity ${entityId} does not exist`);
+    }
+    return isExist;
+  }
+
+  /**
    * Add component object to entity and update queries
    *
    * @param entityId - entity id
    * @param component - component class instance
    * @returns - component instance
+   * @throws will throw an error if entity does not exist
    */
   public addComponent<T extends unknown>(
     entityId: number,
     component: NonNullable<T>
   ): T {
+    this.hasEntity(entityId, true);
     const ctor = Object.getPrototypeOf(component).constructor;
     const componentIndex = this.getComponentIndex(ctor);
-    if (this.components[entityId][componentIndex]) {
-      this.removeComponent(entityId, ctor);
+    if (this.masks[entityId].has(componentIndex)) {
+      this.removeFromMask(entityId, componentIndex);
     }
     this.components[entityId][componentIndex] = component;
     this.addToMask(entityId, componentIndex);
@@ -361,10 +382,14 @@ export class World {
    *
    * @param entityId - entity id
    * @param ctor - component class constructor
+   * @throws will throw an error if entity does not exist
    */
   public removeComponent<T>(entityId: number, ctor: Constructor<T>): void {
+    this.hasEntity(entityId, true);
     const componentIndex = this.getComponentIndex(ctor);
-    this.removeFromMask(entityId, componentIndex);
+    if (this.masks[entityId].has(componentIndex)) {
+      this.removeFromMask(entityId, componentIndex);
+    }
   }
 
   /**
@@ -373,10 +398,12 @@ export class World {
    * @param entityId - entity id
    * @param ctor - class constructor
    * @returns true if component exist,or false if not
+   * @throws will throw an error if entity does not exist
    */
   public hasComponent<T>(entityId: number, ctor: Constructor<T>): boolean {
+    this.hasEntity(entityId, true);
     const componentIndex = this.getComponentIndex(ctor);
-    return !!this.components[entityId][componentIndex];
+    return this.masks[entityId].has(componentIndex);
   }
 
   /**
@@ -385,8 +412,10 @@ export class World {
    * @param entityId - entity id
    * @param ctor - component class constructor
    * @returns component class instance
+   * @throws will throw an error if entity does not exist
    */
   public getComponent<T>(entityId: number, ctor: Constructor<T>): T {
+    this.hasEntity(entityId, true);
     const componentIndex = this.getComponentIndex(ctor);
     return this.components[entityId][componentIndex] as T;
   }

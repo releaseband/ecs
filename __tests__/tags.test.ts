@@ -78,4 +78,9 @@ describe('Tags tests', () => {
       `Tag ${tag} is not registered`
     );
   });
+  it('Should throw error for already registered tag', () => {
+    const world = new World(ENTITIES_COUNT);
+    world.registerTags(TAGS);
+    expect(() => world.registerTags([TEST_TAG0])).toThrowError();
+  });
 });

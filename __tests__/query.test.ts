@@ -588,4 +588,20 @@ describe('Query tests', () => {
       expect(world.queries).toHaveLength(0);
     });
   });
+  it('Should not remove component if it is added again during the callback', () => {
+    const world = new World(ENTITIES_COUNT);
+    world.registerComponent(TestComponent0);
+
+    const entity = world.createEntity();
+    world.addComponent(entity, new TestComponent0());
+
+    expect(world.hasComponent(entity, TestComponent0)).toBeTruthy();
+
+    world.createQuery([TestComponent0]).onEmptySubscribe(() => {
+      world.addComponent(entity, new TestComponent0());
+    });
+
+    world.removeComponent(entity, TestComponent0);
+    expect(world.hasComponent(entity, TestComponent0)).toBeTruthy();
+  });
 });
