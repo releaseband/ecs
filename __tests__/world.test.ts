@@ -1,7 +1,11 @@
 import { World, RESERVED_MASK_INDICES } from '../src/World';
 import { TestComponent0, TestComponent1 } from './util/components';
 import { createEntities } from './util/helpers';
-import { TestSystem0, TestSystem2 } from './util/systems';
+import {
+  TestSystem0,
+  TestSystem2,
+  TestSystemWithCachedEntities,
+} from './util/systems';
 
 const ENTITIES_COUNT = 1_000_000;
 const TEST_ENTITIES_AMOUNT = 500;
@@ -129,14 +133,28 @@ describe('World tests', () => {
     world.registerComponent(TestComponent0);
     world.registerComponent(TestComponent1);
     const ctors = [TestComponent0, TestComponent1];
-    const query = world.createQuery(ctors);
     world.addSystem(new TestSystem0());
     world.addSystem(new TestSystem2());
 
     createEntities(world, ctors, TEST_ENTITIES_AMOUNT);
 
     world.destroy();
-    expect(query.entities.size).toEqual(0);
+    expect(world.systems).toHaveLength(0);
+    expect(world.entities).toHaveLength(0);
+    expect(world.queries).toHaveLength(0);
+  });
+  it('Should destroy systems before free entities', () => {
+    const world = new World(ENTITIES_COUNT);
+    world.registerComponent(TestComponent0);
+    world.registerComponent(TestComponent1);
+    const ctors = [TestComponent0, TestComponent1];
+    world.addSystem(new TestSystemWithCachedEntities(world));
+
+    createEntities(world, ctors, TEST_ENTITIES_AMOUNT);
+
+    expect(world.entities).toHaveLength(TEST_ENTITIES_AMOUNT + 1);
+
+    world.destroy();
     expect(world.systems).toHaveLength(0);
     expect(world.entities).toHaveLength(0);
     expect(world.queries).toHaveLength(0);

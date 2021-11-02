@@ -461,9 +461,9 @@ export class World {
    * - remove systems
    */
   public destroy(): void {
-    this.clear();
-    this.queries.length = 0;
     this.removeAllSystems();
+    this.queries.length = 0;
+    this.clear();
   }
 
   /**
