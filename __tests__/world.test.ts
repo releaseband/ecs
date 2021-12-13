@@ -14,23 +14,24 @@ describe('World tests', () => {
   it('World init', () => {
     const world = new World(ENTITIES_COUNT);
     expect(world.entitiesMax).toEqual(ENTITIES_COUNT);
-    expect(world.lookupTable.length).toEqual(ENTITIES_COUNT);
+    expect(world.lookupTable).toHaveLength(ENTITIES_COUNT);
     expect(world.components).toBeDefined();
     expect(world.masks).toBeDefined();
     expect(world.registeredComponents).toBeDefined();
-    expect(Object.keys(world.registeredComponents).length).toEqual(
+    expect(Object.keys(world.registeredComponents)).toHaveLength(
       RESERVED_MASK_INDICES.length
     );
   });
+
   it('Should throw error if entities limit is exceeded', () => {
     {
       const world = new World(0);
-      expect(() => world.createEntity()).toThrowError();
+      expect(() => world.createEntity()).toThrow();
     }
     {
       const world = new World(1);
       world.createEntity();
-      expect(() => world.createEntity()).toThrowError();
+      expect(() => world.createEntity()).toThrow();
     }
     {
       const AMOUNT = 50;
@@ -39,15 +40,16 @@ describe('World tests', () => {
         for (let i = 0; i < AMOUNT + 1; i++) {
           world.createEntity();
         }
-      }).toThrowError();
+      }).toThrow();
     }
   });
+
   it('Register components', () => {
     const world = new World(ENTITIES_COUNT);
     const RESERVED_INDICES = RESERVED_MASK_INDICES.length;
     world.registerComponent(TestComponent0);
     world.registerComponent(TestComponent1);
-    expect(Object.keys(world.registeredComponents).length).toEqual(
+    expect(Object.keys(world.registeredComponents)).toHaveLength(
       RESERVED_INDICES + 2
     );
     expect(world.getComponentIndex(TestComponent0)).toEqual(
@@ -57,6 +59,7 @@ describe('World tests', () => {
       RESERVED_INDICES + 1
     );
   });
+
   it('Should throw error for non-registered component', () => {
     const world = new World(ENTITIES_COUNT);
 
@@ -64,11 +67,13 @@ describe('World tests', () => {
       `Component ${TestComponent0.name} is not registered`
     );
   });
+
   it('Should throw error for already registered component', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
-    expect(() => world.registerComponent(TestComponent0)).toThrowError();
+    expect(() => world.registerComponent(TestComponent0)).toThrow();
   });
+
   it('removeEntities should remove array of entities', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -83,6 +88,7 @@ describe('World tests', () => {
     expect(world.entities).toHaveLength(0);
     expect(world.pool).toHaveLength(TEST_ENTITIES_AMOUNT);
   });
+
   it('Should remove all entities from world if clear called', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -96,6 +102,7 @@ describe('World tests', () => {
     expect(world.entities).toHaveLength(0);
     expect(world.pool).toHaveLength(TEST_ENTITIES_AMOUNT);
   });
+
   it('World events', () => {
     const world = new World(ENTITIES_COUNT);
 
@@ -105,13 +112,14 @@ describe('World tests', () => {
     };
 
     world.events.on('test-event', callback);
-    expect(testValue).toEqual(false);
+    expect(testValue).toBe(false);
     world.events.emit('test-event', true);
-    expect(testValue).toEqual(true);
+    expect(testValue).toBe(true);
     world.events.remove('test-event', callback);
     world.events.emit('test-event', false);
-    expect(testValue).toEqual(true);
+    expect(testValue).toBe(true);
   });
+
   it('Can delete entities contained in the query object', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -124,10 +132,11 @@ describe('World tests', () => {
     expect(world.entities).toHaveLength(TEST_ENTITIES_AMOUNT);
     expect(query.entities.size).toEqual(TEST_ENTITIES_AMOUNT);
     world.removeEntities(query.entities);
-    expect(query.entities.size).toEqual(0);
+    expect(query.entities.size).toBe(0);
     expect(world.entities).toHaveLength(0);
     expect(world.pool).toHaveLength(TEST_ENTITIES_AMOUNT);
   });
+
   it('Destroy whole world', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -143,6 +152,7 @@ describe('World tests', () => {
     expect(world.entities).toHaveLength(0);
     expect(world.queries).toHaveLength(0);
   });
+
   it('Should destroy systems before free entities', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -159,6 +169,7 @@ describe('World tests', () => {
     expect(world.entities).toHaveLength(0);
     expect(world.queries).toHaveLength(0);
   });
+
   it('Query filtered array of entities', () => {
     const world = new World(ENTITIES_COUNT);
     const TAG0 = 'test0';
@@ -176,6 +187,7 @@ describe('World tests', () => {
     expect(world.queryEntities(ctors1)).toHaveLength(TEST_ENTITIES_AMOUNT);
     expect(world.queryEntities([TAG1])).toHaveLength(0);
   });
+
   describe('Check is entity exist or not', () => {
     const world = new World(ENTITIES_COUNT);
     const entity0 = world.createEntity();
@@ -189,9 +201,10 @@ describe('World tests', () => {
       expect(world.hasEntity(entity1)).toBeTruthy();
       expect(world.hasEntity(entity2)).toBeTruthy();
     });
+
     it('Should throw error if entity does not exist and throwError flag is set', () => {
-      expect(() => world.hasEntity(entity0, true)).toThrowError();
-      expect(() => world.hasEntity(555, true)).toThrowError();
+      expect(() => world.hasEntity(entity0, true)).toThrow();
+      expect(() => world.hasEntity(555, true)).toThrow();
       expect(world.hasEntity(entity1, true)).toBeTruthy();
       expect(world.hasEntity(entity2, true)).toBeTruthy();
     });

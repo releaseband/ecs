@@ -179,6 +179,15 @@ export class World {
   }
 
   /**
+   *
+   * @param tag - tag name
+   * @returns is tag exist in the world
+   */
+  public isTagExist(tag: string): boolean {
+    return this.registeredComponents[tag] !== undefined;
+  }
+
+  /**
    * Get next free entity id
    *
    * @returns new entity id

@@ -28,9 +28,9 @@ describe('Entities tests', () => {
     const world = new World(ENTITIES_COUNT);
     const entity = world.createEntity();
     const name = entity.toString();
-    expect(entity).toEqual(0);
+    expect(entity).toBe(0);
     //lookup for fast access
-    expect(world.lookupTable[entity]).toEqual(0);
+    expect(world.lookupTable[entity]).toBe(0);
     //init bitset
     expect(world.masks[entity]).toBeDefined();
     //set bits for reserved tags
@@ -39,9 +39,7 @@ describe('Entities tests', () => {
     expect(world.masks[entity].has(RESERVED_TAGS.NAME_INDEX)).toBeTruthy();
     //set reserved tags values
     expect(world.components[entity]).toBeDefined();
-    expect(world.components[entity].length).toEqual(
-      RESERVED_MASK_INDICES.length
-    );
+    expect(world.components[entity]).toHaveLength(RESERVED_MASK_INDICES.length);
     //set default unique name(entityId as string)
     expect(world.names.has(name)).toBeTruthy();
     //is name exist
@@ -57,20 +55,19 @@ describe('Entities tests', () => {
     expect(world.masks[entity].has(RESERVED_TAGS.ALIVE_INDEX)).toBeFalsy();
     expect(world.masks[entity].has(RESERVED_TAGS.NAME_INDEX)).toBeFalsy();
     //empty components
-    expect(world.components[entity].length).toEqual(0);
+    expect(world.components[entity]).toHaveLength(0);
   });
+
   it('Create and remove named entity', () => {
     const world = new World(ENTITIES_COUNT);
     const name = 'TEST_NAME';
     const entity = world.createEntity('TEST_NAME');
-    expect(entity).toEqual(0);
-    expect(world.lookupTable[entity]).toEqual(0);
+    expect(entity).toBe(0);
+    expect(world.lookupTable[entity]).toBe(0);
     expect(world.masks[entity]).toBeDefined();
     expect(world.masks[entity].size()).toEqual(RESERVED_MASK_INDICES.length);
     expect(world.components[entity]).toBeDefined();
-    expect(world.components[entity].length).toEqual(
-      RESERVED_MASK_INDICES.length
-    );
+    expect(world.components[entity]).toHaveLength(RESERVED_MASK_INDICES.length);
     expect(world.masks[entity].has(RESERVED_TAGS.ALIVE_INDEX)).toBeTruthy();
     expect(world.masks[entity].has(RESERVED_TAGS.NAME_INDEX)).toBeTruthy();
     expect(world.names.has(name)).toBeTruthy();
@@ -81,17 +78,19 @@ describe('Entities tests', () => {
     expect(world.names.has(name)).toBeFalsy();
     expect(world.masks[entity].has(RESERVED_TAGS.ALIVE_INDEX)).toBeFalsy();
     expect(world.masks[entity].has(RESERVED_TAGS.NAME_INDEX)).toBeFalsy();
-    expect(world.components[entity].length).toEqual(0);
+    expect(world.components[entity]).toHaveLength(0);
     expect(world.getEntity(name)).toBeUndefined();
   });
+
   it('Create entity must throw error if entity with this name exist', () => {
     const world = new World(ENTITIES_COUNT);
     const name = 'TEST_NAME';
     world.createEntity('TEST_NAME');
-    expect(() => world.createEntity('TEST_NAME')).toThrowError(
+    expect(() => world.createEntity('TEST_NAME')).toThrow(
       `Entity with name ${name} already exist`
     );
   });
+
   it('Create multiple entity', () => {
     const world = new World(ENTITIES_COUNT);
     const entities = [];
@@ -113,15 +112,17 @@ describe('Entities tests', () => {
 
     expect(world.pool).toEqual(expect.arrayContaining(entities));
   });
+
   it('Create and Remove entity', () => {
     const world = new World(ENTITIES_COUNT);
     const entity0 = world.createEntity();
     world.removeEntity(entity0);
     expect(world.pool).toEqual([0]);
     const entity1 = world.createEntity();
-    expect(entity1).toEqual(0);
-    expect(world.pool.length).toEqual(0);
+    expect(entity1).toBe(0);
+    expect(world.pool).toHaveLength(0);
   });
+
   it('throw error on remove(entity not exist)', () => {
     const world = new World(ENTITIES_COUNT);
     const entityId = 555;
@@ -129,6 +130,7 @@ describe('Entities tests', () => {
       `Entity ${entityId} does not exist`
     );
   });
+
   it('Add component', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -137,12 +139,13 @@ describe('Entities tests', () => {
     const component = new TestComponent0();
     const componentIndex = world.getComponentIndex(TestComponent0);
     world.addComponent(entity, component);
-    expect(world.components[entity].length).toEqual(
+    expect(world.components[entity]).toHaveLength(
       RESERVED_MASK_INDICES.length + 1
     );
     expect(world.components[entity][componentIndex]).toEqual(component);
-    expect(world.masks[entity].has(componentIndex)).toEqual(true);
+    expect(world.masks[entity].has(componentIndex)).toBe(true);
   });
+
   it('Add multiple components', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -156,9 +159,10 @@ describe('Entities tests', () => {
       const componentIndex = world.getComponentIndex(ctor);
       world.addComponent(entity, component);
       expect(world.components[entity][componentIndex]).toEqual(component);
-      expect(world.masks[entity].has(componentIndex)).toEqual(true);
+      expect(world.masks[entity].has(componentIndex)).toBe(true);
     });
   });
+
   it('Add and remove single component', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -167,11 +171,12 @@ describe('Entities tests', () => {
     const componentIndex = world.getComponentIndex(TestComponent0);
     world.addComponent(entity, component0);
     expect(world.components[entity][componentIndex]).toEqual(component0);
-    expect(world.masks[entity].has(componentIndex)).toEqual(true);
+    expect(world.masks[entity].has(componentIndex)).toBe(true);
     world.removeComponent(entity, TestComponent0);
     expect(world.components[entity][componentIndex]).toBeUndefined();
-    expect(world.masks[entity].has(componentIndex)).toEqual(false);
+    expect(world.masks[entity].has(componentIndex)).toBe(false);
   });
+
   it('Add and remove multiple', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -185,17 +190,18 @@ describe('Entities tests', () => {
       const componentIndex = world.getComponentIndex(ctor);
       world.addComponent(entity, component);
       expect(world.components[entity][componentIndex]).toEqual(component);
-      expect(world.masks[entity].has(componentIndex)).toEqual(true);
+      expect(world.masks[entity].has(componentIndex)).toBe(true);
     });
 
     components.forEach((ctor) => {
       const componentIndex = world.getComponentIndex(ctor);
       world.removeComponent(entity, ctor);
       expect(world.components[entity][componentIndex]).toBeUndefined();
-      expect(world.masks[entity].has(componentIndex)).toEqual(false);
+      expect(world.masks[entity].has(componentIndex)).toBe(false);
     });
     expect(world.masks[entity].size()).toEqual(RESERVED_MASK_INDICES.length);
   });
+
   it('Get component', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -204,12 +210,13 @@ describe('Entities tests', () => {
 
     const component0 = world.getComponent(entity, TestComponent0);
     expect(component0).toBeDefined();
-    expect(component0.value).toEqual(555);
+    expect(component0.value).toBe(555);
     component0.value = 777;
     const component1 = world.getComponent(entity, TestComponent0);
     expect(component1).toBeDefined();
-    expect(component1.value).toEqual(777);
+    expect(component1.value).toBe(777);
   });
+
   it('Shared component', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -225,9 +232,10 @@ describe('Entities tests', () => {
     component.value = 777;
     for (const entity of entities) {
       const data = world.getComponent(entity, TestComponent0);
-      expect(data.value).toEqual(777);
+      expect(data.value).toBe(777);
     }
   });
+
   it('Multiple add/get', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -245,6 +253,7 @@ describe('Entities tests', () => {
       expect(component.value).toEqual(i);
     });
   });
+
   it('Get component before/after add', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -259,14 +268,16 @@ describe('Entities tests', () => {
     const shouldBeUndefinedAgain = world.getComponent(entity, TestComponent0);
     expect(shouldBeUndefinedAgain).toBeUndefined();
   });
+
   it('Check for entity component exist or not', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
     const entity = world.createEntity();
-    expect(world.hasComponent(entity, TestComponent0)).toEqual(false);
+    expect(world.hasComponent(entity, TestComponent0)).toBe(false);
     world.addComponent(entity, new TestComponent0());
-    expect(world.hasComponent(entity, TestComponent0)).toEqual(true);
+    expect(world.hasComponent(entity, TestComponent0)).toBe(true);
   });
+
   it('Must throw error if used non-registered component', () => {
     const world = new World(ENTITIES_COUNT);
 
@@ -276,6 +287,7 @@ describe('Entities tests', () => {
       `Component ${component.constructor.name} is not registered`
     );
   });
+
   it('Add component must return component instance', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent1);
@@ -284,6 +296,7 @@ describe('Entities tests', () => {
     expect(component).toBeDefined();
     expect(world.getComponent(entity, TestComponent1)).toEqual(component);
   });
+
   it('Should throw error if entity does not exist', () => {
     const world = new World(ENTITIES_COUNT);
     const TAG = 'tag';
@@ -293,20 +306,16 @@ describe('Entities tests', () => {
     const entity = 555;
     const errorMsg = `Entity ${entity} does not exist`;
 
-    expect(() => world.hasTag(entity, TAG)).toThrowError(errorMsg);
-    expect(() => world.addTag(entity, TAG)).toThrowError(errorMsg);
-    expect(() => world.removeTag(entity, TAG)).toThrowError(errorMsg);
+    expect(() => world.hasTag(entity, TAG)).toThrow(errorMsg);
+    expect(() => world.addTag(entity, TAG)).toThrow(errorMsg);
+    expect(() => world.removeTag(entity, TAG)).toThrow(errorMsg);
 
-    expect(() => world.hasComponent(entity, TestComponent0)).toThrowError(
+    expect(() => world.hasComponent(entity, TestComponent0)).toThrow(errorMsg);
+    expect(() => world.getComponent(entity, TestComponent0)).toThrow(errorMsg);
+    expect(() => world.addComponent(entity, new TestComponent0())).toThrow(
       errorMsg
     );
-    expect(() => world.getComponent(entity, TestComponent0)).toThrowError(
-      errorMsg
-    );
-    expect(() => world.addComponent(entity, new TestComponent0())).toThrowError(
-      errorMsg
-    );
-    expect(() => world.addComponent(entity, new TestComponent0())).toThrowError(
+    expect(() => world.addComponent(entity, new TestComponent0())).toThrow(
       errorMsg
     );
   });

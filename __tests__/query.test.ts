@@ -20,12 +20,13 @@ describe('Query tests', () => {
     const query = world.createQuery([TestComponent0]);
     const componentIndex = world.getComponentIndex(TestComponent0);
     expect(query).toBeDefined();
-    expect(world.queries.length).toEqual(1);
+    expect(world.queries).toHaveLength(1);
     expect(world.queries).toContain(query);
     expect(query.mask).toBeDefined();
     expect(query.mask.has(componentIndex)).toBe(true);
     expect(query.entities).toBeDefined();
   });
+
   it('Create query in any order', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -35,8 +36,9 @@ describe('Query tests', () => {
 
     const query = world.createQuery([TestComponent0]);
 
-    expect(query.entities.size).toEqual(1);
+    expect(query.entities.size).toBe(1);
   });
+
   it('Create multiple query', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -63,9 +65,10 @@ describe('Query tests', () => {
       });
       createdQueries.push(query);
     });
-    expect(world.queries.length).toEqual(4);
+    expect(world.queries).toHaveLength(4);
     expect(world.queries).toEqual(expect.arrayContaining(createdQueries));
   });
+
   it('Is query updated', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -73,16 +76,17 @@ describe('Query tests', () => {
 
     const query = world.createQuery([TestComponent0]);
 
-    expect(query.entities.size).toEqual(0);
+    expect(query.entities.size).toBe(0);
     const entity0 = world.createEntity();
-    expect(query.entities.size).toEqual(0);
+    expect(query.entities.size).toBe(0);
     world.addComponent(entity0, new TestComponent0());
-    expect(query.entities.size).toEqual(1);
-    expect(query.entities.has(entity0)).toEqual(true);
+    expect(query.entities.size).toBe(1);
+    expect(query.entities.has(entity0)).toBe(true);
     const entity1 = world.createEntity();
     world.addComponent(entity1, new TestComponent1());
-    expect(query.entities.size).toEqual(1);
+    expect(query.entities.size).toBe(1);
   });
+
   it('Is query updated for multiple components', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -94,32 +98,27 @@ describe('Query tests', () => {
       TestComponent1,
       TestComponent2,
     ]);
-    expect(query.mask.has(world.getComponentIndex(TestComponent0))).toEqual(
-      true
-    );
-    expect(query.mask.has(world.getComponentIndex(TestComponent1))).toEqual(
-      true
-    );
-    expect(query.mask.has(world.getComponentIndex(TestComponent2))).toEqual(
-      true
-    );
+    expect(query.mask.has(world.getComponentIndex(TestComponent0))).toBe(true);
+    expect(query.mask.has(world.getComponentIndex(TestComponent1))).toBe(true);
+    expect(query.mask.has(world.getComponentIndex(TestComponent2))).toBe(true);
 
     const entity = world.createEntity();
     world.addComponent(entity, new TestComponent0());
     world.addComponent(entity, new TestComponent1());
-    expect(query.entities.size).toEqual(0);
+    expect(query.entities.size).toBe(0);
 
     world.addComponent(entity, new TestComponent2());
-    expect(query.entities.size).toEqual(1);
-    expect(query.entities.has(entity)).toEqual(true);
+    expect(query.entities.size).toBe(1);
+    expect(query.entities.has(entity)).toBe(true);
     expect(world.masks[entity].union_size(query.mask)).toEqual(
       world.masks[entity].size()
     );
 
     world.removeComponent(entity, TestComponent2);
-    expect(query.entities.size).toEqual(0);
-    expect(query.entities.has(entity)).toEqual(false);
+    expect(query.entities.size).toBe(0);
+    expect(query.entities.has(entity)).toBe(false);
   });
+
   it('Is query updated for different components combo', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -152,11 +151,12 @@ describe('Query tests', () => {
     world.addComponent(entity4, new TestComponent2());
     world.addComponent(entity4, new TestComponent0());
 
-    expect(query.entities.size).toEqual(3);
-    expect(query.entities.has(entity1)).toEqual(true);
-    expect(query.entities.has(entity2)).toEqual(true);
-    expect(query.entities.has(entity4)).toEqual(true);
+    expect(query.entities.size).toBe(3);
+    expect(query.entities.has(entity1)).toBe(true);
+    expect(query.entities.has(entity2)).toBe(true);
+    expect(query.entities.has(entity4)).toBe(true);
   });
+
   it('Is query cached', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -164,9 +164,10 @@ describe('Query tests', () => {
 
     const query0 = world.createQuery([TestComponent0, TestComponent1]);
     const query1 = world.createQuery([TestComponent1, TestComponent0]);
-    expect(world.queries.length).toEqual(1);
+    expect(world.queries).toHaveLength(1);
     expect(query0).toEqual(query1);
   });
+
   it('OnEntityAdd event trigger check', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -185,9 +186,9 @@ describe('Query tests', () => {
     const query = world.createQuery([TestComponent0, TestComponent1]);
     query.onAddSubscribe(testCallBack);
 
-    expect(testValue).toEqual(1);
+    expect(testValue).toBe(1);
     world.addComponent(entity1, new TestComponent1());
-    expect(testValue).toEqual(2);
+    expect(testValue).toBe(2);
 
     query.onAddUnsubscribe(testCallBack);
 
@@ -195,8 +196,9 @@ describe('Query tests', () => {
     world.addComponent(entity2, new TestComponent0());
     world.addComponent(entity2, new TestComponent1());
 
-    expect(testValue).toEqual(2);
+    expect(testValue).toBe(2);
   });
+
   it('OnEntityRemove event trigger', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -220,15 +222,16 @@ describe('Query tests', () => {
     query.onRemoveSubscribe(testCallBack);
 
     world.removeComponent(entity1, TestComponent1);
-    expect(testValue).toEqual(1);
+    expect(testValue).toBe(1);
     world.removeEntity(entity0);
-    expect(testValue).toEqual(2);
+    expect(testValue).toBe(2);
 
     query.onRemoveUnsubscribe(testCallBack);
 
     world.removeEntity(entity2);
-    expect(testValue).toEqual(2);
+    expect(testValue).toBe(2);
   });
+
   it('Trigger onEntityAdd on subscribe,previous subscribers must not called', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -250,9 +253,10 @@ describe('Query tests', () => {
     const query1 = world.createQuery([TestComponent0]);
     query1.onAddSubscribe(query1dCallback);
 
-    expect(query0Value).toEqual(2);
-    expect(query1Value).toEqual(2);
+    expect(query0Value).toBe(2);
+    expect(query1Value).toBe(2);
   });
+
   it('onEntityAdd must not trigger if entity already in query', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -267,10 +271,11 @@ describe('Query tests', () => {
 
     const entity0 = world.createEntity();
     world.addComponent(entity0, new TestComponent0());
-    expect(queryValue).toEqual(1);
+    expect(queryValue).toBe(1);
     world.addComponent(entity0, new TestComponent1());
-    expect(queryValue).toEqual(1);
+    expect(queryValue).toBe(1);
   });
+
   it('Must not trigger onRemove if no entity in query', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -290,10 +295,11 @@ describe('Query tests', () => {
     query.onRemoveSubscribe(queryCallback);
 
     world.removeEntity(entity0);
-    expect(queryValue).toEqual(0);
+    expect(queryValue).toBe(0);
     world.removeEntity(entity1);
-    expect(queryValue).toEqual(0);
+    expect(queryValue).toBe(0);
   });
+
   it('Component must be removed AFTER trigger query onRemove', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -313,6 +319,7 @@ describe('Query tests', () => {
     world.removeComponent(entity, TestComponent0);
     expect(component).toBeDefined();
   });
+
   it('Must trigger onRemove/onAdd on component overwrite', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -330,13 +337,14 @@ describe('Query tests', () => {
     const entity = world.createEntity();
     world.addComponent(entity, new TestComponent0());
 
-    expect(queryAdd).toEqual(1);
+    expect(queryAdd).toBe(1);
 
     world.addComponent(entity, new TestComponent0());
 
-    expect(queryAdd).toEqual(2);
-    expect(queryRemove).toEqual(1);
+    expect(queryAdd).toBe(2);
+    expect(queryRemove).toBe(1);
   });
+
   it('Query sub/unsub chaining', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -352,8 +360,9 @@ describe('Query tests', () => {
     world.addComponent(entity, new TestComponent0());
     world.removeEntity(entity);
 
-    expect(value).toEqual(2);
+    expect(value).toBe(2);
   });
+
   it('Find entity', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent5);
@@ -377,6 +386,7 @@ describe('Query tests', () => {
     expect(filteredId).toEqual(entity1);
     expect(noEntityFiltered).toBeUndefined();
   });
+
   it('Get filtered entities', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent5);
@@ -396,9 +406,10 @@ describe('Query tests', () => {
       return world.getComponent(entity, TestComponent5).value > 2;
     });
 
-    expect(filtered.length).toEqual(2);
+    expect(filtered).toHaveLength(2);
     expect(filtered).toEqual(expect.arrayContaining([entity2, entity3]));
   });
+
   it('Not emit onAdd event for entities already in queue(optional)', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -410,8 +421,9 @@ describe('Query tests', () => {
     let value = 0;
     world.createQuery([TestComponent0]).onAddSubscribe(() => value++, true);
 
-    expect(value).toEqual(0);
+    expect(value).toBe(0);
   });
+
   it('Query usage counter and remove query', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -421,15 +433,15 @@ describe('Query tests', () => {
     const query1 = world.createQuery([TestComponent0, TestComponent1]);
     const query2 = world.createQuery([TestComponent1]);
 
-    expect(query0.usageCounter).toEqual(2);
-    expect(query1.usageCounter).toEqual(2);
-    expect(query2.usageCounter).toEqual(1);
+    expect(query0.usageCounter).toBe(2);
+    expect(query1.usageCounter).toBe(2);
+    expect(query2.usageCounter).toBe(1);
     expect(world.queries).toContain(query0);
     expect(world.queries).toContain(query1);
     expect(world.queries).toContain(query2);
 
     world.removeQuery(query2);
-    expect(world.queries.length).toEqual(1);
+    expect(world.queries).toHaveLength(1);
     expect(world.queries).not.toContain(query2);
 
     world.removeQuery(query1);
@@ -437,8 +449,9 @@ describe('Query tests', () => {
       world.queries.length === 1 && query0.usageCounter === 1
     ).toBeTruthy();
     world.removeQuery(query0);
-    expect(world.queries.length).toEqual(0);
+    expect(world.queries).toHaveLength(0);
   });
+
   it('No query events invoked if query was removed', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -454,7 +467,7 @@ describe('Query tests', () => {
       world.addComponent(entity, new TestComponent0());
       world.addComponent(entity, new TestComponent1());
     }
-    expect(value).toEqual(1);
+    expect(value).toBe(1);
 
     world.removeQuery(query);
     {
@@ -462,8 +475,9 @@ describe('Query tests', () => {
       world.addComponent(entity, new TestComponent0());
       world.addComponent(entity, new TestComponent1());
     }
-    expect(value).toEqual(1);
+    expect(value).toBe(1);
   });
+
   it('While onRemove event entity should not get into other query', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -488,6 +502,7 @@ describe('Query tests', () => {
     world.removeEntity(entity1);
     expect(isEntity1Exist).toBeFalsy();
   });
+
   it('Entity should not get into other query if not alive', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -505,6 +520,7 @@ describe('Query tests', () => {
     world.removeEntity(entity0);
     expect(isExist).toBeFalsy();
   });
+
   it('Should call onRemove for all entities when clear method invoked', () => {
     const TEST_ENTITIES_AMOUNT = 100;
     const world = new World(ENTITIES_COUNT);
@@ -519,6 +535,7 @@ describe('Query tests', () => {
     world.clear();
     expect(removedEntities).toEqual(TEST_ENTITIES_AMOUNT);
   });
+
   it('Should fire onEmpty event once if no more entities in query', () => {
     const world = new World(ENTITIES_COUNT);
     let isEmptyTriggerCount = 0;
@@ -530,8 +547,9 @@ describe('Query tests', () => {
     });
     createEntities(world, ctors, 100);
     world.clear();
-    expect(isEmptyTriggerCount).toEqual(1);
+    expect(isEmptyTriggerCount).toBe(1);
   });
+
   it('All Once methods should remove callbacks after was triggered', () => {
     const world = new World(ENTITIES_COUNT);
     const ctors = [TestComponent0, TestComponent1];
@@ -553,10 +571,11 @@ describe('Query tests', () => {
       });
     createEntities(world, ctors, 100);
     world.clear();
-    expect(onEmptyTriggerCount).toEqual(1);
-    expect(onAddTriggerCount).toEqual(1);
-    expect(onRemoveTriggerCount).toEqual(1);
+    expect(onEmptyTriggerCount).toBe(1);
+    expect(onAddTriggerCount).toBe(1);
+    expect(onRemoveTriggerCount).toBe(1);
   });
+
   describe('Should remove query if empty and removeOnEmpty flag provided', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -571,12 +590,14 @@ describe('Query tests', () => {
       );
       expect(world.queries).toHaveLength(0);
     });
+
     it('on entities remove', () => {
       world.createQuery(ctors, true);
       createEntities(world, ctors, 50);
       world.clear();
       expect(world.queries).toHaveLength(0);
     });
+
     it('should be removed before events', () => {
       createEntities(world, ctors, 50);
       let isQueryRemoved = false;
@@ -588,6 +609,7 @@ describe('Query tests', () => {
       expect(world.queries).toHaveLength(0);
     });
   });
+
   it('Should not remove component if it is added again during the callback', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);

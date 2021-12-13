@@ -7,10 +7,12 @@
   },
   "plugins": ["jest", "eslint-plugin-tsdoc"],
   "extends": [
-    "plugin:jest/recommended",
     "eslint:recommended",
     "plugin:@typescript-eslint/eslint-recommended",
-    "plugin:@typescript-eslint/recommended"
+    "plugin:@typescript-eslint/recommended",
+    "plugin:jest/recommended",
+    "plugin:jest/style",
+    "plugin:jest-formatting/recommended"
   ],
   "parser": "@typescript-eslint/parser",
   "rules": {
