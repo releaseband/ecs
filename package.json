@@ -7,7 +7,7 @@
   "scripts": {
     "bench": "tsc && node ./bench/bench.js",
     "test": "jest --verbose",
-    "build": "tsc --noEmit:false",
+    "build": "tsc",
     "lint": "eslint --ext .ts,.js --ignore-path .eslintignore .",
     "type-check": "tsc --noEmit",
     "commit": "cz"

@@ -20,8 +20,11 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           always-auth: true
+          scope: '@releaseband'
           node-version: 12
           registry-url: https://npm.pkg.github.com/
+      - run: yarn install --frozen-lockfile
+      - run: npm run-script build
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
