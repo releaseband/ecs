@@ -10,8 +10,7 @@
     "build": "tsc --noEmit:false",
     "lint": "eslint --ext .ts,.js --ignore-path .eslintignore .",
     "type-check": "tsc --noEmit",
-    "commit": "cz",
-    "prepare": "husky install"
+    "commit": "cz"
   },
   "repository": {
     "type": "git",
