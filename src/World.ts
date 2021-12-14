@@ -1,5 +1,8 @@
+/* eslint-disable no-restricted-syntax */
+/* eslint-disable no-param-reassign */
 import FastBitSet from 'fastbitset';
-import { EventsEmitter } from './EventsEmitter';
+
+import EventsEmitter from './EventsEmitter';
 import { Constructor } from './Helpers';
 import { Query } from './Query';
 import { System } from './System';
@@ -18,19 +21,60 @@ export const RESERVED_MASK_INDICES = [
 
 export class World {
   nextId = 0;
+
   pool = Array<number>();
+
   entities = Array<number>();
+
   components = Array<Array<unknown>>();
+
   masks = Array<FastBitSet>();
+
   queries = Array<Query>();
-  lookupTable: Int32Array = new Int32Array(this.entitiesMax).fill(-1);
+
+  lookupTable: Int32Array;
+
   registeredComponents: { [componentName: string]: number } = {};
+
   systems = Array<System>();
+
   events: EventsEmitter = new EventsEmitter();
+
   names = new Map<string, number>();
 
   constructor(public entitiesMax: number) {
+    this.lookupTable = new Int32Array(entitiesMax).fill(-1);
     this.registerTags([RESERVED_TAGS.ALIVE, RESERVED_TAGS.NAME]);
+  }
+
+  /**
+   * Get entity components mask
+   *
+   * @param entityId - entity id
+   * @returns FastBitSet instance {@link FastBitSet}
+   */
+  private getEntityMask(entityId: number): FastBitSet {
+    let mask = this.masks[entityId];
+    if (!mask) {
+      mask = new FastBitSet();
+      this.masks[entityId] = mask;
+    }
+    return mask;
+  }
+
+  /**
+   * Get entity components array
+   *
+   * @param entityId - entity id
+   * @returns array of components
+   */
+  private getEntityComponents(entityId: number): Array<unknown> {
+    let components = this.components[entityId];
+    if (!components) {
+      components = [];
+      this.components[entityId] = components;
+    }
+    return components;
   }
 
   /**
@@ -40,7 +84,7 @@ export class World {
    * @param index - bit index
    */
   private addToMask(entityId: number, index: number): void {
-    const mask = this.masks[entityId];
+    const mask = this.getEntityMask(entityId);
     mask.add(index);
     for (const query of this.queries) {
       if (!query.entities.has(entityId)) {
@@ -59,10 +103,11 @@ export class World {
    * @param index - bit index
    */
   private removeFromMask(entityId: number, index: number): void {
-    this.masks[entityId].remove(index);
+    const mask = this.getEntityMask(entityId);
+    mask.remove(index);
     for (const query of this.queries) {
       if (query.entities.has(entityId)) {
-        const diff = query.mask.difference_size(this.masks[entityId]);
+        const diff = query.mask.difference_size(mask);
         if (diff !== 0) {
           if (query.removeOnEmpty && query.entities.size === 1) {
             this.removeQuery(query);
@@ -71,8 +116,9 @@ export class World {
         }
       }
     }
-    if (!this.masks[entityId].has(index)) {
-      this.components[entityId][index] = undefined;
+    if (!mask.has(index)) {
+      const components = this.getEntityComponents(entityId);
+      components[index] = undefined;
     }
   }
 
@@ -85,10 +131,11 @@ export class World {
   public addTag(entityId: number, tag: string): void {
     this.hasEntity(entityId, true);
     const tagIndex = this.getTagIndex(tag);
-    if (this.components[entityId][tagIndex]) {
+    const components = this.getEntityComponents(entityId);
+    if (components[tagIndex]) {
       this.removeTag(entityId, tag);
     }
-    this.components[entityId][tagIndex] = tag;
+    components[tagIndex] = tag;
     this.addToMask(entityId, tagIndex);
   }
 
@@ -101,7 +148,8 @@ export class World {
   public hasTag(entityId: number, tag: string): boolean {
     this.hasEntity(entityId, true);
     const tagIndex = this.getTagIndex(tag);
-    return !!this.components[entityId][tagIndex];
+    const components = this.getEntityComponents(entityId);
+    return !!components[tagIndex];
   }
 
   /**
@@ -194,6 +242,7 @@ export class World {
    */
   private getNextId(): number {
     const index = this.pool.pop();
+    // eslint-disable-next-line no-plusplus
     return index ?? this.nextId++;
   }
 
@@ -225,7 +274,7 @@ export class World {
   ): Array<number> {
     const mask = this.getMask(components);
     const isEqual = (entityId: number) =>
-      mask.difference_size(this.masks[entityId]) === 0;
+      mask.difference_size(this.getEntityMask(entityId)) === 0;
     return this.entities.filter(isEqual);
   }
 
@@ -242,10 +291,10 @@ export class World {
     const mask = this.getMask(components);
     let query = this.queries.find((q) => q.mask.equals(mask));
     if (!query) {
-      query = new Query(this, mask, removeOnEmpty);
+      query = new Query(mask, removeOnEmpty);
       this.queries.push(query);
       for (const entityId of this.entities.values()) {
-        if (query.mask.difference_size(this.masks[entityId]) === 0) {
+        if (query.mask.difference_size(this.getEntityMask(entityId)) === 0) {
           query.add(entityId);
         }
       }
@@ -291,12 +340,12 @@ export class World {
     if (entityName && this.names.has(entityName)) {
       throw new Error(`Entity with name ${entityName} already exist`);
     }
-    const name = entityName ? entityName : entityId.toString();
+    const name = entityName || entityId.toString();
     this.lookupTable[entityId] = this.entities.length;
     this.masks[entityId] = new FastBitSet(RESERVED_MASK_INDICES);
-    this.components[entityId] = [];
-    this.components[entityId][RESERVED_TAGS.ALIVE_INDEX] = RESERVED_TAGS.ALIVE;
-    this.components[entityId][RESERVED_TAGS.NAME_INDEX] = name;
+    const components = this.getEntityComponents(entityId);
+    components[RESERVED_TAGS.ALIVE_INDEX] = RESERVED_TAGS.ALIVE;
+    components[RESERVED_TAGS.NAME_INDEX] = name;
     this.names.set(name, entityId);
     this.entities.push(entityId);
     return entityId;
@@ -326,7 +375,8 @@ export class World {
    */
   public removeEntity(entityId: number): void {
     this.hasEntity(entityId, true);
-    this.masks[entityId].remove(RESERVED_TAGS.ALIVE_INDEX);
+    const mask = this.getEntityMask(entityId);
+    mask.remove(RESERVED_TAGS.ALIVE_INDEX);
     for (const query of this.queries) {
       if (query.entities.has(entityId)) {
         if (query.removeOnEmpty && query.entities.size === 1) {
@@ -335,11 +385,12 @@ export class World {
         query.remove(entityId);
       }
     }
-    const name = this.components[entityId][RESERVED_TAGS.NAME_INDEX] as string;
+    const components = this.getEntityComponents(entityId);
+    const name = components[RESERVED_TAGS.NAME_INDEX] as string;
     this.names.delete(name);
     this.components[entityId] = [];
-    this.masks[entityId].clear();
-    const index = this.lookupTable[entityId];
+    mask.clear();
+    const index = this.lookupTable[entityId] as number;
     const last = this.entities.pop();
     if (last && index < this.entities.length) {
       this.entities[index] = last;
@@ -378,10 +429,12 @@ export class World {
     this.hasEntity(entityId, true);
     const ctor = Object.getPrototypeOf(component).constructor;
     const componentIndex = this.getComponentIndex(ctor);
-    if (this.masks[entityId].has(componentIndex)) {
+    const mask = this.getEntityMask(entityId);
+    if (mask.has(componentIndex)) {
       this.removeFromMask(entityId, componentIndex);
     }
-    this.components[entityId][componentIndex] = component;
+    const components = this.getEntityComponents(entityId);
+    components[componentIndex] = component;
     this.addToMask(entityId, componentIndex);
     return component;
   }
@@ -396,7 +449,8 @@ export class World {
   public removeComponent<T>(entityId: number, ctor: Constructor<T>): void {
     this.hasEntity(entityId, true);
     const componentIndex = this.getComponentIndex(ctor);
-    if (this.masks[entityId].has(componentIndex)) {
+    const mask = this.getEntityMask(entityId);
+    if (mask.has(componentIndex)) {
       this.removeFromMask(entityId, componentIndex);
     }
   }
@@ -412,7 +466,8 @@ export class World {
   public hasComponent<T>(entityId: number, ctor: Constructor<T>): boolean {
     this.hasEntity(entityId, true);
     const componentIndex = this.getComponentIndex(ctor);
-    return this.masks[entityId].has(componentIndex);
+    const mask = this.getEntityMask(entityId);
+    return mask.has(componentIndex);
   }
 
   /**
@@ -426,7 +481,8 @@ export class World {
   public getComponent<T>(entityId: number, ctor: Constructor<T>): T {
     this.hasEntity(entityId, true);
     const componentIndex = this.getComponentIndex(ctor);
-    return this.components[entityId][componentIndex] as T;
+    const components = this.getEntityComponents(entityId);
+    return components[componentIndex] as T;
   }
 
   /**

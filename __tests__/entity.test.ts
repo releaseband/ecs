@@ -34,9 +34,9 @@ describe('Entities tests', () => {
     //init bitset
     expect(world.masks[entity]).toBeDefined();
     //set bits for reserved tags
-    expect(world.masks[entity].size()).toEqual(RESERVED_MASK_INDICES.length);
-    expect(world.masks[entity].has(RESERVED_TAGS.ALIVE_INDEX)).toBeTruthy();
-    expect(world.masks[entity].has(RESERVED_TAGS.NAME_INDEX)).toBeTruthy();
+    expect(world.masks[entity]?.size()).toEqual(RESERVED_MASK_INDICES.length);
+    expect(world.masks[entity]?.has(RESERVED_TAGS.ALIVE_INDEX)).toBeTruthy();
+    expect(world.masks[entity]?.has(RESERVED_TAGS.NAME_INDEX)).toBeTruthy();
     //set reserved tags values
     expect(world.components[entity]).toBeDefined();
     expect(world.components[entity]).toHaveLength(RESERVED_MASK_INDICES.length);
@@ -52,8 +52,8 @@ describe('Entities tests', () => {
     expect(world.names.has(name)).toBeFalsy();
     expect(world.getEntity(name)).toBeUndefined();
     //clear bitset on remove
-    expect(world.masks[entity].has(RESERVED_TAGS.ALIVE_INDEX)).toBeFalsy();
-    expect(world.masks[entity].has(RESERVED_TAGS.NAME_INDEX)).toBeFalsy();
+    expect(world.masks[entity]?.has(RESERVED_TAGS.ALIVE_INDEX)).toBeFalsy();
+    expect(world.masks[entity]?.has(RESERVED_TAGS.NAME_INDEX)).toBeFalsy();
     //empty components
     expect(world.components[entity]).toHaveLength(0);
   });
@@ -65,19 +65,19 @@ describe('Entities tests', () => {
     expect(entity).toBe(0);
     expect(world.lookupTable[entity]).toBe(0);
     expect(world.masks[entity]).toBeDefined();
-    expect(world.masks[entity].size()).toEqual(RESERVED_MASK_INDICES.length);
+    expect(world.masks[entity]?.size()).toEqual(RESERVED_MASK_INDICES.length);
     expect(world.components[entity]).toBeDefined();
     expect(world.components[entity]).toHaveLength(RESERVED_MASK_INDICES.length);
-    expect(world.masks[entity].has(RESERVED_TAGS.ALIVE_INDEX)).toBeTruthy();
-    expect(world.masks[entity].has(RESERVED_TAGS.NAME_INDEX)).toBeTruthy();
+    expect(world.masks[entity]?.has(RESERVED_TAGS.ALIVE_INDEX)).toBeTruthy();
+    expect(world.masks[entity]?.has(RESERVED_TAGS.NAME_INDEX)).toBeTruthy();
     expect(world.names.has(name)).toBeTruthy();
     expect(world.getEntity(name)).toEqual(entity);
 
     world.removeEntity(entity);
     expect(world.entities[entity]).toBeUndefined();
     expect(world.names.has(name)).toBeFalsy();
-    expect(world.masks[entity].has(RESERVED_TAGS.ALIVE_INDEX)).toBeFalsy();
-    expect(world.masks[entity].has(RESERVED_TAGS.NAME_INDEX)).toBeFalsy();
+    expect(world.masks[entity]?.has(RESERVED_TAGS.ALIVE_INDEX)).toBeFalsy();
+    expect(world.masks[entity]?.has(RESERVED_TAGS.NAME_INDEX)).toBeFalsy();
     expect(world.components[entity]).toHaveLength(0);
     expect(world.getEntity(name)).toBeUndefined();
   });
@@ -93,22 +93,22 @@ describe('Entities tests', () => {
 
   it('Create multiple entity', () => {
     const world = new World(ENTITIES_COUNT);
-    const entities = [];
+    const entities: Array<number> = [];
     const count = 5;
 
     for (let i = 0; i < count; i++) {
       const entity = world.createEntity();
       expect(entity).toEqual(i);
-      expect(world.masks[entity].size()).toEqual(RESERVED_MASK_INDICES.length);
+      expect(world.masks[entity]?.size()).toEqual(RESERVED_MASK_INDICES.length);
       expect(world.lookupTable[i]).not.toEqual(-1);
       entities.push(entity);
     }
 
-    for (let i = entities.length - 1; i >= 0; i--) {
-      world.removeEntity(entities[i]);
-      expect(world.pool).toContain(entities[i]);
-      expect(world.lookupTable[i]).toEqual(-1);
-    }
+    entities.forEach((entity, index) => {
+      world.removeEntity(entity);
+      expect(world.pool).toContain(entity);
+      expect(world.lookupTable[index]).toEqual(-1);
+    });
 
     expect(world.pool).toEqual(expect.arrayContaining(entities));
   });
@@ -142,8 +142,8 @@ describe('Entities tests', () => {
     expect(world.components[entity]).toHaveLength(
       RESERVED_MASK_INDICES.length + 1
     );
-    expect(world.components[entity][componentIndex]).toEqual(component);
-    expect(world.masks[entity].has(componentIndex)).toBe(true);
+    expect(world.components[entity]?.[componentIndex]).toEqual(component);
+    expect(world.masks[entity]?.has(componentIndex)).toBe(true);
   });
 
   it('Add multiple components', () => {
@@ -158,8 +158,8 @@ describe('Entities tests', () => {
       const component = new ctor();
       const componentIndex = world.getComponentIndex(ctor);
       world.addComponent(entity, component);
-      expect(world.components[entity][componentIndex]).toEqual(component);
-      expect(world.masks[entity].has(componentIndex)).toBe(true);
+      expect(world.components[entity]?.[componentIndex]).toEqual(component);
+      expect(world.masks[entity]?.has(componentIndex)).toBe(true);
     });
   });
 
@@ -170,11 +170,11 @@ describe('Entities tests', () => {
     const component0 = new TestComponent0();
     const componentIndex = world.getComponentIndex(TestComponent0);
     world.addComponent(entity, component0);
-    expect(world.components[entity][componentIndex]).toEqual(component0);
-    expect(world.masks[entity].has(componentIndex)).toBe(true);
+    expect(world.components[entity]?.[componentIndex]).toEqual(component0);
+    expect(world.masks[entity]?.has(componentIndex)).toBe(true);
     world.removeComponent(entity, TestComponent0);
-    expect(world.components[entity][componentIndex]).toBeUndefined();
-    expect(world.masks[entity].has(componentIndex)).toBe(false);
+    expect(world.components[entity]?.[componentIndex]).toBeUndefined();
+    expect(world.masks[entity]?.has(componentIndex)).toBe(false);
   });
 
   it('Add and remove multiple', () => {
@@ -189,17 +189,17 @@ describe('Entities tests', () => {
       const component = new ctor();
       const componentIndex = world.getComponentIndex(ctor);
       world.addComponent(entity, component);
-      expect(world.components[entity][componentIndex]).toEqual(component);
-      expect(world.masks[entity].has(componentIndex)).toBe(true);
+      expect(world.components[entity]?.[componentIndex]).toEqual(component);
+      expect(world.masks[entity]?.has(componentIndex)).toBe(true);
     });
 
     components.forEach((ctor) => {
       const componentIndex = world.getComponentIndex(ctor);
       world.removeComponent(entity, ctor);
-      expect(world.components[entity][componentIndex]).toBeUndefined();
-      expect(world.masks[entity].has(componentIndex)).toBe(false);
+      expect(world.components[entity]?.[componentIndex]).toBeUndefined();
+      expect(world.masks[entity]?.has(componentIndex)).toBe(false);
     });
-    expect(world.masks[entity].size()).toEqual(RESERVED_MASK_INDICES.length);
+    expect(world.masks[entity]?.size()).toEqual(RESERVED_MASK_INDICES.length);
   });
 
   it('Get component', () => {
@@ -223,17 +223,17 @@ describe('Entities tests', () => {
     const component = new TestComponent0(555);
     const componentIndex = world.getComponentIndex(TestComponent0);
 
-    const entities = [];
+    const entities: Array<number> = [];
     for (let i = 0; i < 5; i++) {
-      entities[i] = world.createEntity();
-      world.addComponent(entities[i], component);
-      expect(world.components[entities[i]][componentIndex]).toEqual(component);
+      const entity = world.createEntity();
+      world.addComponent(entity, component);
+      expect(world.components[entity]?.[componentIndex]).toEqual(component);
     }
     component.value = 777;
-    for (const entity of entities) {
+    entities.forEach((entity) => {
       const data = world.getComponent(entity, TestComponent0);
       expect(data.value).toBe(777);
-    }
+    });
   });
 
   it('Multiple add/get', () => {

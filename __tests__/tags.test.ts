@@ -10,12 +10,12 @@ describe('Tags tests', () => {
     const RESERVED_INDICES = RESERVED_MASK_INDICES.length;
     world.registerComponent(TestComponent0);
     world.registerTags(TAGS);
-    expect(world.registeredComponents.TestComponent0).toEqual(
+    expect(world.registeredComponents[TestComponent0.name]).toEqual(
       RESERVED_INDICES + 0
     );
-    expect(world.registeredComponents.tag0).toEqual(RESERVED_INDICES + 1);
-    expect(world.registeredComponents.tag1).toEqual(RESERVED_INDICES + 2);
-    expect(world.registeredComponents.tag2).toEqual(RESERVED_INDICES + 3);
+    expect(world.registeredComponents[TEST_TAG0]).toEqual(RESERVED_INDICES + 1);
+    expect(world.registeredComponents[TEST_TAG1]).toEqual(RESERVED_INDICES + 2);
+    expect(world.registeredComponents[TEST_TAG2]).toEqual(RESERVED_INDICES + 3);
   });
 
   it('Add,remove and has tags', () => {

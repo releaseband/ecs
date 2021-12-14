@@ -1,61 +1,22 @@
+/* eslint-disable no-restricted-syntax */
 import FastBitSet from 'fastbitset';
-import { World } from './World';
 
-type Subscriber = {
-  callback: CallableFunction;
-  once: boolean;
-};
-class QueryEventsEmitter {
-  private subscribers = Array<Subscriber>();
-
-  /**
-   * Add subscriber for the event
-   *
-   * @param cb - Callback that is triggered when the event is fired
-   */
-  subscribe(callback: CallableFunction, once = false): void {
-    this.subscribers.push({ callback, once });
-  }
-
-  /**
-   * Remove subscriber
-   *
-   * @param cb - Callback that you want to unsubscribe
-   */
-  unsubscribe(callback: CallableFunction): void {
-    this.subscribers = this.subscribers.filter(
-      (subscriber) => subscriber.callback !== callback
-    );
-  }
-
-  /**
-   * Fire event
-   *
-   * @param args - optional args that you want to pass to subscribers
-   */
-  emit<T extends unknown[]>(...args: T): void {
-    for (const subscriber of this.subscribers) {
-      subscriber.callback(...args);
-      if (subscriber.once) {
-        this.unsubscribe(subscriber.callback);
-      }
-    }
-  }
-}
+import QueryEventsEmitter from './QueryEventsEmitter';
 
 export type Predicate = (entity: number) => boolean;
+
 export class Query {
   usageCounter = 0;
+
   entities = new Set<number>();
+
   private onEntityAdd = new QueryEventsEmitter();
+
   private onEntityRemove = new QueryEventsEmitter();
+
   private onEmpty = new QueryEventsEmitter();
 
-  constructor(
-    private world: World,
-    public mask: FastBitSet,
-    public removeOnEmpty: boolean
-  ) {}
+  constructor(public mask: FastBitSet, public removeOnEmpty: boolean) {}
 
   /**
    * Subscribe for onEntityAdd event
@@ -188,6 +149,7 @@ export class Query {
     for (const entity of this.entities) {
       if (predicate(entity)) return entity;
     }
+    return undefined;
   }
 
   /**

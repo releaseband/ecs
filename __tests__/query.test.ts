@@ -110,8 +110,8 @@ describe('Query tests', () => {
     world.addComponent(entity, new TestComponent2());
     expect(query.entities.size).toBe(1);
     expect(query.entities.has(entity)).toBe(true);
-    expect(world.masks[entity].union_size(query.mask)).toEqual(
-      world.masks[entity].size()
+    expect(world.masks[entity]?.union_size(query.mask)).toEqual(
+      world.masks[entity]?.size()
     );
 
     world.removeComponent(entity, TestComponent2);

@@ -1,29 +1,28 @@
-export class EventsEmitter {
+export default class EventsEmitter {
   private events: { [event: string]: Set<CallableFunction> } = {};
 
   on(event: string, callback: CallableFunction): EventsEmitter {
-    if (!this.events[event]) {
-      this.events[event] = new Set();
+    let listeners = this.events[event];
+    if (!listeners) {
+      listeners = new Set();
+      this.events[event] = listeners;
     }
-    const listeners = this.events[event];
     listeners.add(callback);
-
     return this;
   }
 
   remove(event: string, callback: CallableFunction): EventsEmitter {
-    if (this.events[event]) {
-      const listeners = this.events[event];
+    const listeners = this.events[event];
+    if (listeners) {
       listeners.delete(callback);
     }
     return this;
   }
 
   emit<T>(event: string, arg?: T): void {
-    if (this.events[event]) {
-      for (const listener of this.events[event]) {
-        listener(arg);
-      }
+    const listeners = this.events[event];
+    if (listeners) {
+      listeners.forEach((listener) => listener(arg));
     }
   }
 }

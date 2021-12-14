@@ -1,4 +1,4 @@
-export * from './World';
+export * from './Helpers';
 export * from './Query';
 export * from './System';
-export * from './Helpers';
+export * from './World';
