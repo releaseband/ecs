@@ -13,6 +13,7 @@
     ".eslintrc.js",
     "prettier.config.js",
     "commitlint.config.js",
+    "jest.config.js",
     "__tests__/**/*"
   ]
 }
