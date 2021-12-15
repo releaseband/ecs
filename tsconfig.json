@@ -4,6 +4,8 @@
     "noEmit": false,
     "module": "commonjs",
     "outDir": "dist",
+    "target": "es6",
+    "typeRoots": ["node_modules/@types"],
     "paths": {
       "fastbitset": ["./node_modules/@types/fastbitset/index.d.ts"]
     }
