@@ -1,28 +1,41 @@
-export default class EventsEmitter {
-  private events: { [event: string]: Set<CallableFunction> } = {};
+type Listener = {
+  callback: CallableFunction;
+  once: boolean;
+};
 
-  on(event: string, callback: CallableFunction): EventsEmitter {
-    let listeners = this.events[event];
+export default class EventsEmitter {
+  private events: Map<string, Array<Listener>> = new Map();
+
+  on(event: string, callback: CallableFunction, once = false): EventsEmitter {
+    let listeners = this.events.get(event);
     if (!listeners) {
-      listeners = new Set();
-      this.events[event] = listeners;
+      listeners = [];
+      this.events.set(event, listeners);
     }
-    listeners.add(callback);
+    listeners.push({ callback, once });
+
     return this;
   }
 
   remove(event: string, callback: CallableFunction): EventsEmitter {
-    const listeners = this.events[event];
+    const listeners = this.events.get(event);
     if (listeners) {
-      listeners.delete(callback);
+      this.events.set(
+        event,
+        listeners.filter((listener) => listener.callback !== callback)
+      );
     }
     return this;
   }
 
-  emit<T>(event: string, arg?: T): void {
-    const listeners = this.events[event];
+  emit(event: string, ...args: unknown[]): void {
+    const listeners = this.events.get(event);
     if (listeners) {
-      listeners.forEach((listener) => listener(arg));
+      listeners.forEach((listener) => listener.callback(...args));
+      this.events.set(
+        event,
+        listeners.filter((listener) => !listener.once)
+      );
     }
   }
 }

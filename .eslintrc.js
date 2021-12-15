@@ -7,6 +7,7 @@ module.exports = {
   ],
   plugins: ['jest', 'eslint-plugin-tsdoc'],
   rules: {
+    'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
     '@typescript-eslint/no-empty-interface': ['off'],
     'tsdoc/syntax': 'warn',
   },

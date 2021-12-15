@@ -1,20 +1,21 @@
-/* eslint-disable no-restricted-syntax */
 import FastBitSet from 'fastbitset';
 
-import QueryEventsEmitter from './QueryEventsEmitter';
+import EventsEmitter from './EventsEmitter';
 
 export type Predicate = (entity: number) => boolean;
 
+enum Event {
+  onEntityAdd = 'ON_ENTITY_ADD',
+  onEntityRemove = 'ON_ENTITY_REMOVE',
+  onEmpty = 'ON_EMPTY',
+}
+
 export class Query {
-  usageCounter = 0;
+  usageCounter = 1;
 
   entities = new Set<number>();
 
-  private onEntityAdd = new QueryEventsEmitter();
-
-  private onEntityRemove = new QueryEventsEmitter();
-
-  private onEmpty = new QueryEventsEmitter();
+  private events = new EventsEmitter();
 
   constructor(public mask: FastBitSet, public removeOnEmpty: boolean) {}
 
@@ -25,11 +26,9 @@ export class Query {
    * @param noEmitOnSubscribe - emit onAdd event for entities already in the queue after subscribe
    */
   onAddSubscribe(callback: CallableFunction, noEmitOnSubscribe = false): Query {
-    this.onEntityAdd.subscribe(callback);
+    this.events.on(Event.onEntityAdd, callback);
     if (!noEmitOnSubscribe) {
-      for (const entity of this.entities) {
-        callback(entity);
-      }
+      this.entities.forEach((entity) => callback(entity));
     }
     return this;
   }
@@ -40,7 +39,7 @@ export class Query {
    * @param callback - will triggered when entity added to query and immediately removed from queue
    */
   onAddOnceSubscribe(callback: CallableFunction): Query {
-    this.onEntityAdd.subscribe(callback, true);
+    this.events.on(Event.onEntityAdd, callback, true);
     return this;
   }
 
@@ -51,7 +50,7 @@ export class Query {
    * @returns query
    */
   onEmptySubscribe(callback: CallableFunction): Query {
-    this.onEmpty.subscribe(callback);
+    this.events.on(Event.onEmpty, callback);
     return this;
   }
 
@@ -62,7 +61,7 @@ export class Query {
    * @returns query
    */
   onEmptyOnceSubscribe(callback: CallableFunction): Query {
-    this.onEmpty.subscribe(callback, true);
+    this.events.on(Event.onEmpty, callback, true);
     return this;
   }
 
@@ -72,7 +71,7 @@ export class Query {
    * @returns query
    */
   onEmptyUnsubscribe(callback: CallableFunction): Query {
-    this.onEmpty.unsubscribe(callback);
+    this.events.remove(Event.onEmpty, callback);
     return this;
   }
 
@@ -82,7 +81,7 @@ export class Query {
    * @param callback - will triggered when entity removed from query
    */
   onRemoveSubscribe(callback: CallableFunction): Query {
-    this.onEntityRemove.subscribe(callback);
+    this.events.on(Event.onEntityRemove, callback);
     return this;
   }
 
@@ -92,7 +91,7 @@ export class Query {
    * @param callback - will triggered when entity removed from query and immediately unsubscribed
    */
   onRemoveOnceSubscribe(callback: CallableFunction): Query {
-    this.onEntityRemove.subscribe(callback, true);
+    this.events.on(Event.onEntityRemove, callback, true);
     return this;
   }
 
@@ -102,7 +101,7 @@ export class Query {
    * @param callback - will be removed from subscribers
    */
   onAddUnsubscribe(callback: CallableFunction): Query {
-    this.onEntityAdd.unsubscribe(callback);
+    this.events.remove(Event.onEntityAdd, callback);
     return this;
   }
 
@@ -112,7 +111,7 @@ export class Query {
    * @param callback - will be removed from subscribers
    */
   onRemoveUnsubscribe(callback: CallableFunction): Query {
-    this.onEntityRemove.unsubscribe(callback);
+    this.events.remove(Event.onEntityRemove, callback);
     return this;
   }
 
@@ -123,7 +122,7 @@ export class Query {
    */
   add(entityId: number): void {
     this.entities.add(entityId);
-    this.onEntityAdd.emit(entityId);
+    this.events.emit(Event.onEntityAdd, entityId);
   }
 
   /**
@@ -133,9 +132,9 @@ export class Query {
    */
   remove(entityId: number): void {
     this.entities.delete(entityId);
-    this.onEntityRemove.emit(entityId);
+    this.events.emit(Event.onEntityRemove, entityId);
     if (!this.entities.size) {
-      this.onEmpty.emit(entityId);
+      this.events.emit(Event.onEmpty, entityId);
     }
   }
 
@@ -146,6 +145,7 @@ export class Query {
    * @returns entity id
    */
   find(predicate: Predicate): number | undefined {
+    // eslint-disable-next-line no-restricted-syntax
     for (const entity of this.entities) {
       if (predicate(entity)) return entity;
     }
@@ -159,12 +159,15 @@ export class Query {
    * @returns array of entities id
    */
   filter(predicate: Predicate): number[] {
-    const filtered = [];
-    for (const entity of this.entities) {
-      if (predicate(entity)) {
-        filtered.push(entity);
-      }
-    }
-    return filtered;
+    return Array.from(this.entities).filter(predicate);
+  }
+
+  /**
+   * Decrease usage counter
+   * @returns is no one use this query
+   */
+  dispose(): boolean {
+    this.usageCounter -= 1;
+    return this.usageCounter === 0;
   }
 }

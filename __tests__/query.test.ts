@@ -1,6 +1,5 @@
 import { Query } from '../src/Query';
 import { World } from '../src/World';
-
 import {
   TestComponent0,
   TestComponent1,
@@ -181,7 +180,9 @@ describe('Query tests', () => {
     const entity1 = world.createEntity();
     world.addComponent(entity1, new TestComponent0());
 
-    const testCallBack = () => testValue++;
+    const testCallBack = () => {
+      testValue += 1;
+    };
 
     const query = world.createQuery([TestComponent0, TestComponent1]);
     query.onAddSubscribe(testCallBack);
@@ -216,7 +217,9 @@ describe('Query tests', () => {
     world.addComponent(entity2, new TestComponent0());
     world.addComponent(entity2, new TestComponent1());
 
-    const testCallBack = () => testValue++;
+    const testCallBack = () => {
+      testValue += 1;
+    };
 
     const query = world.createQuery([TestComponent0, TestComponent1]);
     query.onRemoveSubscribe(testCallBack);
@@ -239,8 +242,12 @@ describe('Query tests', () => {
     let query0Value = 0;
     let query1Value = 0;
 
-    const query0dCallback = () => query0Value++;
-    const query1dCallback = () => query1Value++;
+    const query0dCallback = () => {
+      query0Value += 1;
+    };
+    const query1dCallback = () => {
+      query1Value += 1;
+    };
 
     const query0 = world.createQuery([TestComponent0]);
     query0.onAddSubscribe(query0dCallback);
@@ -264,7 +271,9 @@ describe('Query tests', () => {
 
     let queryValue = 0;
 
-    const queryCallback = () => queryValue++;
+    const queryCallback = () => {
+      queryValue += 1;
+    };
 
     const query = world.createQuery([TestComponent0]);
     query.onAddSubscribe(queryCallback);
@@ -284,7 +293,9 @@ describe('Query tests', () => {
 
     let queryValue = 0;
 
-    const queryCallback = () => queryValue++;
+    const queryCallback = () => {
+      queryValue += 1;
+    };
 
     const entity0 = world.createEntity();
     world.addComponent(entity0, new TestComponent1());
@@ -304,7 +315,7 @@ describe('Query tests', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
 
-    let component = undefined;
+    let component;
 
     const queryCallback = (e: number) => {
       component = world.getComponent(e, TestComponent0);
@@ -327,8 +338,12 @@ describe('Query tests', () => {
     let queryAdd = 0;
     let queryRemove = 0;
 
-    const queryAddCallback = () => queryAdd++;
-    const queryRemoveCallback = () => queryRemove++;
+    const queryAddCallback = () => {
+      queryAdd += 1;
+    };
+    const queryRemoveCallback = () => {
+      queryRemove += 1;
+    };
 
     const query = world.createQuery([TestComponent0]);
     query.onAddSubscribe(queryAddCallback);
@@ -350,7 +365,9 @@ describe('Query tests', () => {
     world.registerComponent(TestComponent0);
 
     let value = 0;
-    const callback = () => value++;
+    const callback = () => {
+      value += 1;
+    };
     world
       .createQuery([TestComponent0])
       .onAddSubscribe(callback)
@@ -419,7 +436,9 @@ describe('Query tests', () => {
     world.addComponent(entity1, new TestComponent0());
 
     let value = 0;
-    world.createQuery([TestComponent0]).onAddSubscribe(() => value++, true);
+    world.createQuery([TestComponent0]).onAddSubscribe(() => {
+      value += 1;
+    }, true);
 
     expect(value).toBe(0);
   });
@@ -460,7 +479,9 @@ describe('Query tests', () => {
     let value = 0;
     const query = world
       .createQuery([TestComponent0, TestComponent1])
-      .onAddSubscribe(() => (value += 1));
+      .onAddSubscribe(() => {
+        value += 1;
+      });
 
     {
       const entity = world.createEntity();
@@ -529,7 +550,7 @@ describe('Query tests', () => {
     world.registerComponent(TestComponent1);
     const ctors = [TestComponent0, TestComponent1];
     world.createQuery(ctors).onRemoveSubscribe(() => {
-      removedEntities++;
+      removedEntities += 1;
     });
     createEntities(world, ctors, TEST_ENTITIES_AMOUNT);
     world.clear();

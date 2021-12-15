@@ -8,6 +8,11 @@
       "fastbitset": ["./node_modules/@types/fastbitset/index.d.ts"]
     }
   },
-  "include": ["src/**/*", ".eslintrc.js", "prettier.config.js"],
-  "exclude": ["tests/**/*"]
+  "include": [
+    "src/**/*",
+    ".eslintrc.js",
+    "prettier.config.js",
+    "commitlint.config.js",
+    "__tests__/**/*"
+  ]
 }

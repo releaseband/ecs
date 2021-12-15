@@ -1,5 +1,3 @@
-/* eslint-disable no-restricted-syntax */
-/* eslint-disable no-param-reassign */
 import FastBitSet from 'fastbitset';
 
 import EventsEmitter from './EventsEmitter';
@@ -34,11 +32,11 @@ export class World {
 
   lookupTable: Int32Array;
 
-  registeredComponents: { [componentName: string]: number } = {};
+  registeredComponents: Map<string, number> = new Map();
 
   systems = Array<System>();
 
-  events: EventsEmitter = new EventsEmitter();
+  events = new EventsEmitter();
 
   names = new Map<string, number>();
 
@@ -86,6 +84,7 @@ export class World {
   private addToMask(entityId: number, index: number): void {
     const mask = this.getEntityMask(entityId);
     mask.add(index);
+    // eslint-disable-next-line no-restricted-syntax
     for (const query of this.queries) {
       if (!query.entities.has(entityId)) {
         const diff = query.mask.difference_size(mask);
@@ -105,6 +104,7 @@ export class World {
   private removeFromMask(entityId: number, index: number): void {
     const mask = this.getEntityMask(entityId);
     mask.remove(index);
+    // eslint-disable-next-line no-restricted-syntax
     for (const query of this.queries) {
       if (query.entities.has(entityId)) {
         const diff = query.mask.difference_size(mask);
@@ -172,7 +172,7 @@ export class World {
    *
    */
   getComponentIndex<T>(ctor: Constructor<T>): number {
-    const index = this.registeredComponents[ctor.cachedComponentId];
+    const index = this.registeredComponents.get(ctor.cachedComponentId);
     if (index === undefined) {
       throw new Error(`Component ${ctor.name} is not registered`);
     }
@@ -188,7 +188,7 @@ export class World {
    *
    */
   getTagIndex(tag: string): number {
-    const index = this.registeredComponents[tag];
+    const index = this.registeredComponents.get(tag);
     if (index === undefined) {
       throw new Error(`Tag ${tag} is not registered`);
     }
@@ -202,12 +202,12 @@ export class World {
    * @throws error if component already added
    */
   public registerComponent<T>(ctor: Constructor<T>): void {
-    if (this.registeredComponents[ctor.name]) {
+    if (this.registeredComponents.has(ctor.name)) {
       throw Error(`Component ${ctor.name} already registered`);
     }
+    // eslint-disable-next-line no-param-reassign
     ctor.cachedComponentId = ctor.name;
-    const index = Object.keys(this.registeredComponents).length;
-    this.registeredComponents[ctor.name] = index;
+    this.registeredComponents.set(ctor.name, this.registeredComponents.size);
   }
 
   /**
@@ -216,12 +216,12 @@ export class World {
    * @param tags - array of tags
    */
   public registerTags(tags: string[]): void {
-    let index = Object.keys(this.registeredComponents).length;
+    let index = this.registeredComponents.size;
     tags.forEach((tag) => {
-      if (this.registeredComponents[tag]) {
+      if (this.registeredComponents.has(tag)) {
         throw Error(`Tag ${tag} already registered`);
       }
-      this.registeredComponents[tag] = index;
+      this.registeredComponents.set(tag, index);
       index += 1;
     });
   }
@@ -232,7 +232,7 @@ export class World {
    * @returns is tag exist in the world
    */
   public isTagExist(tag: string): boolean {
-    return this.registeredComponents[tag] !== undefined;
+    return this.registeredComponents.has(tag);
   }
 
   /**
@@ -253,13 +253,13 @@ export class World {
    */
   private getMask(components: (Constructor<unknown> | string)[]): FastBitSet {
     const indices: number[] = [...RESERVED_MASK_INDICES];
-    for (const component of components) {
+    components.forEach((component) => {
       const index =
         typeof component === 'string'
           ? this.getTagIndex(component)
           : this.getComponentIndex(component);
       indices.push(index);
-    }
+    });
     return new FastBitSet(indices);
   }
 
@@ -293,13 +293,15 @@ export class World {
     if (!query) {
       query = new Query(mask, removeOnEmpty);
       this.queries.push(query);
+      // eslint-disable-next-line no-restricted-syntax
       for (const entityId of this.entities.values()) {
         if (query.mask.difference_size(this.getEntityMask(entityId)) === 0) {
           query.add(entityId);
         }
       }
+    } else {
+      query.usageCounter += 1;
     }
-    query.usageCounter += 1;
     return query;
   }
 
@@ -309,13 +311,8 @@ export class World {
    * @param query - query object to remove
    */
   public removeQuery(query: Query): void {
-    const index = this.queries.findIndex((q) => q === query);
-    if (index !== -1) {
-      if (query.usageCounter > 1) {
-        query.usageCounter -= 1;
-      } else {
-        this.queries.splice(index, 1);
-      }
+    if (query.dispose()) {
+      this.queries = this.queries.filter((q) => q !== query);
     }
   }
 
@@ -377,6 +374,7 @@ export class World {
     this.hasEntity(entityId, true);
     const mask = this.getEntityMask(entityId);
     mask.remove(RESERVED_TAGS.ALIVE_INDEX);
+    // eslint-disable-next-line no-restricted-syntax
     for (const query of this.queries) {
       if (query.entities.has(entityId)) {
         if (query.removeOnEmpty && query.entities.size === 1) {
@@ -500,13 +498,13 @@ export class World {
    * @param ctor - system class constructor
    */
   public removeSystem(ctor: Constructor<System>): void {
-    for (const [index, system] of this.systems.entries()) {
-      if (system.constructor.name === ctor.name) {
-        if (system.exit) system.exit();
-        this.systems.splice(index, 1);
-        return;
+    this.systems = this.systems.filter((system) => {
+      const isExist = system.constructor.name === ctor.name;
+      if (isExist && system.exit) {
+        system.exit();
       }
-    }
+      return !isExist;
+    });
   }
 
   /**
@@ -514,7 +512,9 @@ export class World {
    */
   public removeAllSystems(): void {
     this.systems.forEach((system) => {
-      if (system.exit) system.exit();
+      if (system.exit) {
+        system.exit();
+      }
     });
     this.systems.length = 0;
   }
@@ -539,8 +539,10 @@ export class World {
    * @param dt - delta time
    */
   public update(dt: number): void {
-    for (const system of this.systems) {
-      if (system.update) system.update(dt);
-    }
+    this.systems.forEach((system) => {
+      if (system.update) {
+        system.update(dt);
+      }
+    });
   }
 }

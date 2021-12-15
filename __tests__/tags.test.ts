@@ -1,6 +1,6 @@
-import { World, RESERVED_MASK_INDICES } from '../src/World';
+import { RESERVED_MASK_INDICES, World } from '../src/World';
 import { TestComponent0 } from './util/components';
-import { TEST_TAG0, TEST_TAG1, TEST_TAG2, TAGS } from './util/tags';
+import { TAGS, TEST_TAG0, TEST_TAG1, TEST_TAG2 } from './util/tags';
 
 const ENTITIES_COUNT = 1_000;
 
@@ -10,12 +10,18 @@ describe('Tags tests', () => {
     const RESERVED_INDICES = RESERVED_MASK_INDICES.length;
     world.registerComponent(TestComponent0);
     world.registerTags(TAGS);
-    expect(world.registeredComponents[TestComponent0.name]).toEqual(
+    expect(world.registeredComponents.get(TestComponent0.name)).toEqual(
       RESERVED_INDICES + 0
     );
-    expect(world.registeredComponents[TEST_TAG0]).toEqual(RESERVED_INDICES + 1);
-    expect(world.registeredComponents[TEST_TAG1]).toEqual(RESERVED_INDICES + 2);
-    expect(world.registeredComponents[TEST_TAG2]).toEqual(RESERVED_INDICES + 3);
+    expect(world.registeredComponents.get(TEST_TAG0)).toEqual(
+      RESERVED_INDICES + 1
+    );
+    expect(world.registeredComponents.get(TEST_TAG1)).toEqual(
+      RESERVED_INDICES + 2
+    );
+    expect(world.registeredComponents.get(TEST_TAG2)).toEqual(
+      RESERVED_INDICES + 3
+    );
   });
 
   it('Add,remove and has tags', () => {
@@ -26,7 +32,9 @@ describe('Tags tests', () => {
     let value = 0;
     const query = world
       .createQuery([TestComponent0, TEST_TAG0, TEST_TAG1])
-      .onAddSubscribe(() => (value += 1));
+      .onAddSubscribe(() => {
+        value += 1;
+      });
 
     const entity = world.createEntity();
     world.addComponent(entity, new TestComponent0());
@@ -46,7 +54,9 @@ describe('Tags tests', () => {
     expect(world.hasTag(entity, TEST_TAG0)).toBeTruthy();
     expect(world.hasTag(entity, TEST_TAG1)).toBeTruthy();
 
-    query.onRemoveSubscribe(() => (value -= 1));
+    query.onRemoveSubscribe(() => {
+      value -= 1;
+    });
 
     expect(value).toBe(2);
     world.removeTag(entity, TEST_TAG1);

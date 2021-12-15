@@ -1,1 +1,1 @@
-module.exports = require("@releaseband/commitlint-config");
+module.exports = require('@releaseband/commitlint-config');

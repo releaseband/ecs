@@ -1,4 +1,4 @@
-import { World, RESERVED_MASK_INDICES } from '../src/World';
+import { RESERVED_MASK_INDICES, World } from '../src/World';
 import { TestComponent0, TestComponent1 } from './util/components';
 import { createEntities } from './util/helpers';
 import {
@@ -18,9 +18,7 @@ describe('World tests', () => {
     expect(world.components).toBeDefined();
     expect(world.masks).toBeDefined();
     expect(world.registeredComponents).toBeDefined();
-    expect(Object.keys(world.registeredComponents)).toHaveLength(
-      RESERVED_MASK_INDICES.length
-    );
+    expect(world.registeredComponents.size).toBe(RESERVED_MASK_INDICES.length);
   });
 
   it('Should throw error if entities limit is exceeded', () => {
@@ -37,7 +35,7 @@ describe('World tests', () => {
       const AMOUNT = 50;
       const world = new World(AMOUNT);
       expect(() => {
-        for (let i = 0; i < AMOUNT + 1; i++) {
+        for (let i = 0; i < AMOUNT + 1; i += 1) {
           world.createEntity();
         }
       }).toThrow();
@@ -49,9 +47,7 @@ describe('World tests', () => {
     const RESERVED_INDICES = RESERVED_MASK_INDICES.length;
     world.registerComponent(TestComponent0);
     world.registerComponent(TestComponent1);
-    expect(Object.keys(world.registeredComponents)).toHaveLength(
-      RESERVED_INDICES + 2
-    );
+    expect(world.registeredComponents.size).toBe(RESERVED_INDICES + 2);
     expect(world.getComponentIndex(TestComponent0)).toEqual(
       RESERVED_INDICES + 0
     );
@@ -105,18 +101,19 @@ describe('World tests', () => {
 
   it('World events', () => {
     const world = new World(ENTITIES_COUNT);
+    const TEST_EVENT = 'test_event';
 
     let testValue = false;
     const callback = () => {
       testValue = true;
     };
 
-    world.events.on('test-event', callback);
+    world.events.on(TEST_EVENT, callback);
     expect(testValue).toBe(false);
-    world.events.emit('test-event', true);
+    world.events.emit(TEST_EVENT, true);
     expect(testValue).toBe(true);
-    world.events.remove('test-event', callback);
-    world.events.emit('test-event', false);
+    world.events.remove(TEST_EVENT, callback);
+    world.events.emit(TEST_EVENT, false);
     expect(testValue).toBe(true);
   });
 
