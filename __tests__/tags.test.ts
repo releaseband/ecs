@@ -104,4 +104,14 @@ describe('Tags tests', () => {
     world.registerTags(TAGS);
     expect(world.isTagExist(TEST_TAG0)).toBeTruthy();
   });
+
+  it('Should accept multiple tags', () => {
+    const world = new World(ENTITIES_COUNT);
+    world.registerTags(TAGS);
+    const entity = world.createEntity();
+    world.addTag(entity, ...TAGS);
+    expect(world.hasTag(entity, TEST_TAG0)).toBeTruthy();
+    expect(world.hasTag(entity, TEST_TAG1)).toBeTruthy();
+    expect(world.hasTag(entity, TEST_TAG2)).toBeTruthy();
+  });
 });

@@ -1,5 +1,4 @@
-import { Query } from '../src/Query';
-import { World } from '../src/World';
+import { NOT, Query, World } from '../src';
 import {
   TestComponent0,
   TestComponent1,
@@ -9,6 +8,7 @@ import {
   TestComponent5,
 } from './util/components';
 import { createEntities } from './util/helpers';
+import { TAGS, TEST_TAG0, TEST_TAG1, TEST_TAG2, TEST_TAG3 } from './util/tags';
 
 const ENTITIES_COUNT = 1_000_000;
 
@@ -21,8 +21,8 @@ describe('Query tests', () => {
     expect(query).toBeDefined();
     expect(world.queries).toHaveLength(1);
     expect(world.queries).toContain(query);
-    expect(query.mask).toBeDefined();
-    expect(query.mask.has(componentIndex)).toBe(true);
+    expect(query.queryMask).toBeDefined();
+    expect(query.queryMask.mask.has(componentIndex)).toBe(true);
     expect(query.entities).toBeDefined();
   });
 
@@ -57,10 +57,10 @@ describe('Query tests', () => {
       const query = world.createQuery(ctors);
       expect(query).toBeDefined();
       expect(world.queries).toContain(query);
-      expect(query.mask).toBeDefined();
+      expect(query.queryMask).toBeDefined();
       ctors.forEach((ctor) => {
         const componentIndex = world.getComponentIndex(ctor);
-        expect(query.mask.has(componentIndex)).toBe(true);
+        expect(query.queryMask.mask.has(componentIndex)).toBe(true);
       });
       createdQueries.push(query);
     });
@@ -97,9 +97,15 @@ describe('Query tests', () => {
       TestComponent1,
       TestComponent2,
     ]);
-    expect(query.mask.has(world.getComponentIndex(TestComponent0))).toBe(true);
-    expect(query.mask.has(world.getComponentIndex(TestComponent1))).toBe(true);
-    expect(query.mask.has(world.getComponentIndex(TestComponent2))).toBe(true);
+    expect(
+      query.queryMask.mask.has(world.getComponentIndex(TestComponent0))
+    ).toBe(true);
+    expect(
+      query.queryMask.mask.has(world.getComponentIndex(TestComponent1))
+    ).toBe(true);
+    expect(
+      query.queryMask.mask.has(world.getComponentIndex(TestComponent2))
+    ).toBe(true);
 
     const entity = world.createEntity();
     world.addComponent(entity, new TestComponent0());
@@ -109,7 +115,7 @@ describe('Query tests', () => {
     world.addComponent(entity, new TestComponent2());
     expect(query.entities.size).toBe(1);
     expect(query.entities.has(entity)).toBe(true);
-    expect(world.masks[entity]?.union_size(query.mask)).toEqual(
+    expect(world.masks[entity]?.union_size(query.queryMask.mask)).toEqual(
       world.masks[entity]?.size()
     );
 
@@ -646,5 +652,160 @@ describe('Query tests', () => {
 
     world.removeComponent(entity, TestComponent0);
     expect(world.hasComponent(entity, TestComponent0)).toBeTruthy();
+  });
+
+  describe('Query NOT condition support', () => {
+    it('Should accept NOT condition', () => {
+      const world = new World(ENTITIES_COUNT);
+      world.registerComponent(TestComponent0);
+      world.registerComponent(TestComponent1);
+      world.registerTags([TEST_TAG0, TEST_TAG1]);
+      const query = world.createQuery([
+        TEST_TAG0,
+        NOT(TEST_TAG1),
+        TestComponent0,
+        NOT(TestComponent1),
+      ]);
+
+      const testComponent0 = world.getComponentIndex(TestComponent0);
+      const testComponent1 = world.getComponentIndex(TestComponent1);
+      const testTag0 = world.getTagIndex(TEST_TAG0);
+      const testTag1 = world.getTagIndex(TEST_TAG1);
+      expect(query.queryMask.mask.has(testComponent0)).toBeTruthy();
+      expect(query.queryMask.mask.has(testComponent1)).toBeFalsy();
+      expect(query.queryMask.mask.has(testTag0)).toBeTruthy();
+      expect(query.queryMask.mask.has(testTag1)).toBeFalsy();
+      expect(query.queryMask.notMask.has(testComponent0)).toBeFalsy();
+      expect(query.queryMask.notMask.has(testComponent1)).toBeTruthy();
+      expect(query.queryMask.notMask.has(testTag0)).toBeFalsy();
+      expect(query.queryMask.notMask.has(testTag1)).toBeTruthy();
+    });
+
+    it('Should not add entity with NOT components', () => {
+      const world = new World(ENTITIES_COUNT);
+      world.registerComponent(TestComponent0);
+      world.registerComponent(TestComponent1);
+      world.registerComponent(TestComponent2);
+      world.registerTags([TEST_TAG0]);
+
+      const query = world.createQuery([
+        TEST_TAG0,
+        TestComponent0,
+        TestComponent1,
+        NOT(TestComponent2),
+      ]);
+      const entity = world.createEntity();
+      world.addTag(entity, TEST_TAG0);
+      world.addComponent(entity, new TestComponent0());
+      world.addComponent(entity, new TestComponent1());
+      world.addComponent(entity, new TestComponent2());
+
+      expect(query.entities.size).toBe(0);
+      expect(query.entities.has(entity)).toBeFalsy();
+
+      world.removeComponent(entity, TestComponent2);
+
+      expect(query.entities.size).toBe(1);
+      expect(query.entities.has(entity)).toBeTruthy();
+    });
+
+    it('Should throw error if not registered', () => {
+      const world = new World(ENTITIES_COUNT);
+
+      expect(() => world.createQuery([NOT(TestComponent4)])).toThrow();
+      expect(() => world.createQuery([NOT(TEST_TAG3)])).toThrow();
+    });
+
+    it('Query different tags combo', () => {
+      const world = new World(ENTITIES_COUNT);
+      world.registerTags(TAGS);
+      const entity0 = world.createEntity();
+      world.addTag(entity0, TEST_TAG0);
+      world.addTag(entity0, TEST_TAG1);
+      const entity1 = world.createEntity();
+      world.addTag(entity1, TEST_TAG0);
+      const entity2 = world.createEntity();
+      world.addTag(entity2, TEST_TAG1);
+      const entity3 = world.createEntity();
+      world.addTag(entity3, TEST_TAG2);
+      const entity4 = world.createEntity();
+      world.addTag(entity4, TEST_TAG1);
+      world.addTag(entity4, TEST_TAG2);
+      const entity5 = world.createEntity();
+      world.addTag(entity5, TEST_TAG0);
+      world.addTag(entity5, TEST_TAG1);
+      world.addTag(entity5, TEST_TAG2);
+      world.addTag(entity5, TEST_TAG3);
+
+      const isEqual = (
+        entities: ReadonlyArray<number>,
+        ref: ReadonlyArray<number>
+      ): void => {
+        expect(entities).toEqual(ref);
+        expect(entities).toHaveLength(ref.length);
+      };
+
+      {
+        const entities = world.queryEntities([NOT(TEST_TAG2)]);
+        expect(entities).toEqual([entity0, entity1, entity2]);
+      }
+
+      {
+        const entities = world.queryEntities([TEST_TAG2]);
+        isEqual(entities, [entity3, entity4, entity5]);
+      }
+
+      {
+        const entities = world.queryEntities([TEST_TAG1]);
+        isEqual(entities, [entity0, entity2, entity4, entity5]);
+      }
+      {
+        const entities = world.queryEntities([NOT(TEST_TAG3)]);
+        isEqual(entities, [entity0, entity1, entity2, entity3, entity4]);
+      }
+      {
+        const entities = world.queryEntities([NOT(TEST_TAG3)]);
+        isEqual(entities, [entity0, entity1, entity2, entity3, entity4]);
+      }
+    });
+
+    it('Should fill query on create', () => {
+      const world = new World(ENTITIES_COUNT);
+      world.registerComponent(TestComponent0);
+      world.registerTags([TEST_TAG0, TEST_TAG1]);
+
+      const AMOUNT = 50;
+      createEntities(world, [TestComponent0, TEST_TAG0], AMOUNT);
+      const arr = createEntities(world, [TestComponent0, TEST_TAG1], AMOUNT);
+
+      const query = world.createQuery([NOT(TEST_TAG0), TestComponent0]);
+
+      expect(query.entities.size).toBe(arr.length);
+      arr.forEach((entity) => expect(query.entities.has(entity)).toBeTruthy());
+    });
+
+    it('Should contain all entities if mask empty', () => {
+      const world = new World(ENTITIES_COUNT);
+      world.registerComponent(TestComponent0);
+      world.registerTags([TEST_TAG0]);
+
+      const AMOUNT = 50;
+      createEntities(world, [TestComponent0, TEST_TAG0], AMOUNT);
+      const query = world.createQuery([]);
+
+      expect(query.entities.size).toBe(AMOUNT);
+    });
+
+    it('Should work with only NOT components', () => {
+      const world = new World(ENTITIES_COUNT);
+      world.registerComponent(TestComponent0);
+      world.registerTags([TEST_TAG0]);
+
+      const AMOUNT = 50;
+      createEntities(world, [TestComponent0], AMOUNT);
+      const query = world.createQuery([NOT(TEST_TAG0)]);
+
+      expect(query.entities.size).toBe(AMOUNT);
+    });
   });
 });
