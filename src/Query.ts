@@ -1,6 +1,7 @@
 import FastBitSet from 'fastbitset';
 
 import EventsEmitter from './EventsEmitter';
+import QueryMask from './QueryMask';
 
 export type Predicate = (entity: number) => boolean;
 
@@ -17,7 +18,24 @@ export class Query {
 
   private events = new EventsEmitter();
 
-  constructor(public mask: FastBitSet, public removeOnEmpty: boolean) {}
+  constructor(public queryMask: QueryMask, public removeOnEmpty: boolean) {}
+
+  /**
+   *
+   * @param entityId - entity id
+   * @param mask - entity mask
+   * @returns is query empty and must be removed
+   */
+  update(entityId: number, mask: FastBitSet): boolean {
+    const isExist = this.entities.has(entityId);
+    const isMatch = this.queryMask.match(mask);
+    if (isExist && !isMatch) {
+      this.remove(entityId);
+    } else if (!isExist && isMatch) {
+      this.add(entityId);
+    }
+    return this.removeOnEmpty && !this.entities.size;
+  }
 
   /**
    * Subscribe for onEntityAdd event
