@@ -577,6 +577,22 @@ describe('Query tests', () => {
     expect(isEmptyTriggerCount).toBe(1);
   });
 
+  it('Should not fire onEmpty event if onEmptyUnsubscribe called', () => {
+    const world = new World(ENTITIES_COUNT);
+    let isEmptyTriggerCount = 0;
+    world.registerComponent(TestComponent0);
+    world.registerComponent(TestComponent1);
+    const ctors = [TestComponent0, TestComponent1];
+    const callback = () => {
+      isEmptyTriggerCount += 1;
+    };
+    world.createQuery(ctors).onEmptySubscribe(callback);
+    world.createQuery(ctors).onEmptyUnsubscribe(callback);
+    createEntities(world, ctors, 100);
+    world.clear();
+    expect(isEmptyTriggerCount).not.toBe(1);
+  });
+
   it('All Once methods should remove callbacks after was triggered', () => {
     const world = new World(ENTITIES_COUNT);
     const ctors = [TestComponent0, TestComponent1];

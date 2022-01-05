@@ -3,6 +3,7 @@ import { TestComponent0, TestComponent1 } from './util/components';
 import { createEntities } from './util/helpers';
 import {
   TestSystem0,
+  TestSystem1,
   TestSystem2,
   TestSystemWithCachedEntities,
 } from './util/systems';
@@ -204,6 +205,47 @@ describe('World tests', () => {
       expect(() => world.hasEntity(555, true)).toThrow();
       expect(world.hasEntity(entity1, true)).toBeTruthy();
       expect(world.hasEntity(entity2, true)).toBeTruthy();
+    });
+  });
+
+  describe('Debug mode', () => {
+    const world = new World(ENTITIES_COUNT);
+    const debug = world.debugData;
+    world.addSystem(new TestSystem0());
+    world.addSystem(new TestSystem1());
+    world.addSystem(new TestSystem2());
+
+    it('Should be disabled by default', () => {
+      expect(debug).toBeDefined();
+      expect(debug.updateTimeDetailed).toBeDefined();
+      expect(debug.updateTime).toBeDefined();
+      world.update(1);
+      expect(world.debugData.updateTime).toBe(0);
+      expect(debug.updateTimeDetailed.size).toBe(0);
+    });
+
+    it('Should switch to debug mode', () => {
+      world.enableDebugMode();
+      world.update(1);
+      expect(world.debugData.updateTime).not.toBe(0);
+      expect(debug.updateTimeDetailed.size).not.toBe(0);
+    });
+
+    it('Detailed list should contain only systems with update method', () => {
+      world.update(1);
+      expect(debug.updateTimeDetailed.has(TestSystem0.name)).toBeTruthy();
+      expect(debug.updateTimeDetailed.has(TestSystem1.name)).toBeTruthy();
+      expect(debug.updateTimeDetailed.has(TestSystem2.name)).toBeFalsy();
+    });
+
+    it('Should switch to normal mode', () => {
+      debug.updateTime = 0;
+      debug.updateTimeDetailed.clear();
+      world.disableDebugMode();
+      world.update(1);
+      expect(world.debugData.updateTime).toBe(0);
+      expect(debug.updateTimeDetailed.size).toBe(0);
+      expect(debug.updateTimeDetailed.has(TestSystem0.name)).toBeFalsy();
     });
   });
 });
