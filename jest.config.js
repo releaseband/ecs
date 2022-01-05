@@ -1,3 +1,4 @@
+// eslint-disable-next-line
 /** @type {import('ts-jest/dist/types').InitialOptionsTsJest} */
 module.exports = {
   preset: 'ts-jest',
@@ -14,4 +15,6 @@ module.exports = {
   },
   coverageDirectory: './coverage',
   coverageReporters: ['html'],
+  // need for mock performance.now() under node env
+  setupFilesAfterEnv: ['./jestPerformanceNowMock.js'],
 };

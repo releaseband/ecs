@@ -18,28 +18,40 @@ export const RESERVED_MASK_INDICES = [
   RESERVED_TAGS.NAME_INDEX,
 ] as const;
 
+export type DebugData = {
+  updateTime: number;
+  updateTimeDetailed: Map<string, number>;
+};
+
 export class World {
-  nextId = 0;
+  public nextId = 0;
 
-  pool = Array<number>();
+  public readonly pool: Array<number> = [];
 
-  entities = Array<number>();
+  public readonly entities: Array<number> = [];
 
-  components = Array<Array<unknown>>();
+  public readonly components = Array<Array<unknown>>();
 
-  masks = Array<FastBitSet>();
+  public readonly masks: Array<FastBitSet> = [];
 
-  queries = Array<Query>();
+  public queries: Array<Query> = [];
 
-  lookupTable: Int32Array;
+  public readonly lookupTable: Int32Array;
 
-  registeredComponents: Map<string, number> = new Map();
+  public readonly registeredComponents: Map<string, number> = new Map();
 
-  systems = Array<System>();
+  public systems: Array<System> = [];
 
-  events = new EventsEmitter();
+  public readonly events = new EventsEmitter();
 
-  names = new Map<string, number>();
+  public readonly names = new Map<string, number>();
+
+  public update: (dt: number) => void = this.normalUpdate;
+
+  public debugData: DebugData = {
+    updateTime: 0,
+    updateTimeDetailed: new Map(),
+  };
 
   constructor(public entitiesMax: number) {
     this.lookupTable = new Int32Array(entitiesMax).fill(-1);
@@ -517,18 +529,54 @@ export class World {
   }
 
   /**
-   * Iterate through added systems and call method on each system
+   * Iterate through added systems and call update method on each system
    *
    * see {@link System}
    *
    * @param dt - delta time
    */
-  public update(dt: number): void {
+  private normalUpdate(dt: number): void {
     this.systems.forEach((system) => {
       if (system.update) {
         system.update(dt);
       }
     });
+  }
+
+  /**
+   * Iterate through systems, call update and store execution time
+   *
+   * see {@link System}
+   *
+   * @param dt - delta time
+   */
+  private debugUpdate(dt: number): void {
+    const updateTimeStart = performance.now();
+    this.systems.forEach((system) => {
+      if (system.update) {
+        const start = performance.now();
+        system.update(dt);
+        this.debugData.updateTimeDetailed.set(
+          system.constructor.name,
+          performance.now() - start
+        );
+      }
+    });
+    this.debugData.updateTime = performance.now() - updateTimeStart;
+  }
+
+  /**
+   * Switch to debug mode
+   */
+  public enableDebugMode(): void {
+    this.update = this.debugUpdate;
+  }
+
+  /**
+   * Switch to normal mode(default)
+   */
+  public disableDebugMode(): void {
+    this.update = this.normalUpdate;
   }
 
   /**

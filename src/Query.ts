@@ -12,11 +12,11 @@ enum Event {
 }
 
 export class Query {
-  usageCounter = 1;
+  public usageCounter = 1;
 
-  entities = new Set<number>();
+  public readonly entities = new Set<number>();
 
-  private events = new EventsEmitter();
+  private readonly events = new EventsEmitter();
 
   constructor(public queryMask: QueryMask, public removeOnEmpty: boolean) {}
 
