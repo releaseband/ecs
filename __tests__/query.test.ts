@@ -337,7 +337,7 @@ describe('Query tests', () => {
     expect(component).toBeDefined();
   });
 
-  it('Must trigger onRemove/onAdd on component overwrite', () => {
+  it('Must trigger onRemove/onAdd on component overwrite(forceAdd flag used)', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
 
@@ -360,7 +360,7 @@ describe('Query tests', () => {
 
     expect(queryAdd).toBe(1);
 
-    world.addComponent(entity, new TestComponent0());
+    world.addComponent(entity, new TestComponent0(), true);
 
     expect(queryAdd).toBe(2);
     expect(queryRemove).toBe(1);

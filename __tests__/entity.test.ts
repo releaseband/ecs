@@ -296,4 +296,13 @@ describe('Entities tests', () => {
       errorMsg
     );
   });
+
+  it('Should throw error if component already exist', () => {
+    const world = new World(ENTITIES_COUNT);
+    world.registerComponent(TestComponent0);
+
+    const entity = world.createEntity();
+    world.addComponent(entity, new TestComponent0());
+    expect(() => world.addComponent(entity, new TestComponent0())).toThrow();
+  });
 });

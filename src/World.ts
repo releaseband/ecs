@@ -414,18 +414,26 @@ export class World {
    *
    * @param entityId - entity id
    * @param component - component class instance
+   * @param forceAdd - add a component even if it exists
    * @returns - component instance
    * @throws will throw an error if entity does not exist
+   * @throws will throw error if component exist
    */
   public addComponent<T extends unknown>(
     entityId: number,
-    component: NonNullable<T>
+    component: NonNullable<T>,
+    forceAdd = false
   ): T {
     this.hasEntity(entityId, true);
     const ctor = Object.getPrototypeOf(component).constructor;
     const componentIndex = this.getComponentIndex(ctor);
     const mask = this.getEntityMask(entityId);
     if (mask.has(componentIndex)) {
+      if (!forceAdd) {
+        throw new Error(
+          `Entity ${entityId} already has component ${ctor.name}`
+        );
+      }
       this.removeFromMask(entityId, componentIndex);
     }
     const components = this.getEntityComponents(entityId);
