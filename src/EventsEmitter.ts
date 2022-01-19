@@ -38,4 +38,8 @@ export default class EventsEmitter {
       );
     }
   }
+
+  dispose(): void {
+    this.events.clear();
+  }
 }
