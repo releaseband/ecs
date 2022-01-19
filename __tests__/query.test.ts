@@ -19,8 +19,8 @@ describe('Query tests', () => {
     const query = world.createQuery([TestComponent0]);
     const componentIndex = world.getComponentIndex(TestComponent0);
     expect(query).toBeDefined();
-    expect(world.queries).toHaveLength(1);
-    expect(world.queries).toContain(query);
+    expect(world.queryManager.registry).toHaveLength(1);
+    expect(world.queryManager.registry[0]?.queries.has(query)).toBeTruthy();
     expect(query.queryMask).toBeDefined();
     expect(query.queryMask.mask.has(componentIndex)).toBe(true);
     expect(query.entities).toBeDefined();
@@ -51,21 +51,22 @@ describe('Query tests', () => {
       [TestComponent0, TestComponent1, TestComponent2],
     ];
 
-    const createdQueries: Query[] = [];
+    const queries: Array<Query> = [];
 
     QUERIES.forEach((ctors) => {
       const query = world.createQuery(ctors);
       expect(query).toBeDefined();
-      expect(world.queries).toContain(query);
+      expect(world.queryManager.hasQuery(query)).toBeTruthy();
+
       expect(query.queryMask).toBeDefined();
       ctors.forEach((ctor) => {
         const componentIndex = world.getComponentIndex(ctor);
         expect(query.queryMask.mask.has(componentIndex)).toBe(true);
       });
-      createdQueries.push(query);
+      queries.push(query);
     });
-    expect(world.queries).toHaveLength(4);
-    expect(world.queries).toEqual(expect.arrayContaining(createdQueries));
+    expect(queries).toHaveLength(QUERIES.length);
+    expect(world.queryManager.registry).toHaveLength(QUERIES.length);
   });
 
   it('Is query updated', () => {
@@ -160,17 +161,6 @@ describe('Query tests', () => {
     expect(query.entities.has(entity1)).toBe(true);
     expect(query.entities.has(entity2)).toBe(true);
     expect(query.entities.has(entity4)).toBe(true);
-  });
-
-  it('Is query cached', () => {
-    const world = new World(ENTITIES_COUNT);
-    world.registerComponent(TestComponent0);
-    world.registerComponent(TestComponent1);
-
-    const query0 = world.createQuery([TestComponent0, TestComponent1]);
-    const query1 = world.createQuery([TestComponent1, TestComponent0]);
-    expect(world.queries).toHaveLength(1);
-    expect(query0).toEqual(query1);
   });
 
   it('OnEntityAdd event trigger check', () => {
@@ -449,34 +439,6 @@ describe('Query tests', () => {
     expect(value).toBe(0);
   });
 
-  it('Query usage counter and remove query', () => {
-    const world = new World(ENTITIES_COUNT);
-    world.registerComponent(TestComponent0);
-    world.registerComponent(TestComponent1);
-
-    const query0 = world.createQuery([TestComponent0, TestComponent1]);
-    const query1 = world.createQuery([TestComponent0, TestComponent1]);
-    const query2 = world.createQuery([TestComponent1]);
-
-    expect(query0.usageCounter).toBe(2);
-    expect(query1.usageCounter).toBe(2);
-    expect(query2.usageCounter).toBe(1);
-    expect(world.queries).toContain(query0);
-    expect(world.queries).toContain(query1);
-    expect(world.queries).toContain(query2);
-
-    world.removeQuery(query2);
-    expect(world.queries).toHaveLength(1);
-    expect(world.queries).not.toContain(query2);
-
-    world.removeQuery(query1);
-    expect(
-      world.queries.length === 1 && query0.usageCounter === 1
-    ).toBeTruthy();
-    world.removeQuery(query0);
-    expect(world.queries).toHaveLength(0);
-  });
-
   it('No query events invoked if query was removed', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
@@ -586,11 +548,13 @@ describe('Query tests', () => {
     const callback = () => {
       isEmptyTriggerCount += 1;
     };
-    world.createQuery(ctors).onEmptySubscribe(callback);
-    world.createQuery(ctors).onEmptyUnsubscribe(callback);
+    world
+      .createQuery(ctors)
+      .onEmptySubscribe(callback)
+      .onEmptyUnsubscribe(callback);
     createEntities(world, ctors, 100);
     world.clear();
-    expect(isEmptyTriggerCount).not.toBe(1);
+    expect(isEmptyTriggerCount).toBe(0);
   });
 
   it('All Once methods should remove callbacks after was triggered', () => {
@@ -626,30 +590,32 @@ describe('Query tests', () => {
     const ctors = [TestComponent0, TestComponent1];
 
     it('on components remove', () => {
-      world.createQuery(ctors, true);
+      const query = world.createQuery(ctors, true);
       const entities = createEntities(world, ctors, 50);
       entities.forEach((entity) =>
         world.removeComponent(entity, TestComponent0)
       );
-      expect(world.queries).toHaveLength(0);
+      expect(world.queryManager.hasQuery(query)).toBeFalsy();
+      expect(world.queryManager.registry).toHaveLength(0);
     });
 
     it('on entities remove', () => {
-      world.createQuery(ctors, true);
+      const query = world.createQuery(ctors, true);
       createEntities(world, ctors, 50);
       world.clear();
-      expect(world.queries).toHaveLength(0);
+      expect(world.queryManager.hasQuery(query)).toBeFalsy();
+      expect(world.queryManager.registry).toHaveLength(0);
     });
 
     it('should be removed before events', () => {
       createEntities(world, ctors, 50);
       let isQueryRemoved = false;
       world.createQuery(ctors, true).onEmptyOnceSubscribe(() => {
-        isQueryRemoved = world.queries.length === 0;
+        isQueryRemoved = true;
       });
       world.clear();
       expect(isQueryRemoved).toBeTruthy();
-      expect(world.queries).toHaveLength(0);
+      expect(world.queryManager.registry).toHaveLength(0);
     });
   });
 
@@ -822,6 +788,65 @@ describe('Query tests', () => {
       const query = world.createQuery([NOT(TEST_TAG0)]);
 
       expect(query.entities.size).toBe(AMOUNT);
+    });
+  });
+
+  describe('Query instances', () => {
+    it('Should create new query instance', () => {
+      const world = new World(ENTITIES_COUNT);
+      world.registerComponent(TestComponent0);
+      world.registerComponent(TestComponent1);
+      world.registerTags([TEST_TAG0, TEST_TAG1]);
+
+      const query0 = world.createQuery([TestComponent0, TestComponent1]);
+      const query1 = world.createQuery([TestComponent0, TestComponent1]);
+      expect(query0).not.toBe(query1);
+    });
+
+    it('Each instance has its own events', () => {
+      const world = new World(ENTITIES_COUNT);
+      world.registerComponent(TestComponent0);
+
+      let testValue = 0;
+
+      const query0 = world.createQuery([TestComponent0]).onAddSubscribe(() => {
+        testValue += 1;
+      });
+      const query1 = world.createQuery([TestComponent0]).onAddSubscribe(() => {
+        testValue += 1;
+      });
+      {
+        const entity = world.createEntity();
+        world.addComponent(entity, new TestComponent0());
+        expect(testValue).toBe(2);
+      }
+      {
+        world.removeQuery(query0);
+        const entity = world.createEntity();
+        world.addComponent(entity, new TestComponent0());
+        expect(testValue).toBe(3);
+      }
+      {
+        world.removeQuery(query1);
+        const entity = world.createEntity();
+        world.addComponent(entity, new TestComponent0());
+        expect(testValue).toBe(3);
+      }
+    });
+
+    it('Should return array of queries if getQueries called', () => {
+      const world = new World(ENTITIES_COUNT);
+      world.registerComponent(TestComponent0);
+      world.registerTags([TEST_TAG0]);
+      world.registerComponent(TestComponent2);
+
+      world.createQuery([TestComponent0]);
+      world.createQuery([TestComponent0]);
+      world.createQuery([TestComponent0, TEST_TAG0]);
+
+      expect(world.getQueries([TestComponent0])).toHaveLength(2);
+      expect(world.getQueries([TestComponent0, TEST_TAG0])).toHaveLength(1);
+      expect(world.getQueries([TestComponent2])).toHaveLength(0);
     });
   });
 });

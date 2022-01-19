@@ -1,5 +1,3 @@
-import FastBitSet from 'fastbitset';
-
 import EventsEmitter from './EventsEmitter';
 import QueryMask from './QueryMask';
 
@@ -12,30 +10,13 @@ enum Event {
 }
 
 export class Query {
-  public usageCounter = 1;
-
-  public readonly entities = new Set<number>();
-
   private readonly events = new EventsEmitter();
 
-  constructor(public queryMask: QueryMask, public removeOnEmpty: boolean) {}
-
-  /**
-   *
-   * @param entityId - entity id
-   * @param mask - entity mask
-   * @returns is query empty and must be removed
-   */
-  update(entityId: number, mask: FastBitSet): boolean {
-    const isExist = this.entities.has(entityId);
-    const isMatch = this.queryMask.match(mask);
-    if (isExist && !isMatch) {
-      this.remove(entityId);
-    } else if (!isExist && isMatch) {
-      this.add(entityId);
-    }
-    return this.removeOnEmpty && !this.entities.size;
-  }
+  constructor(
+    public readonly entities: Set<number>,
+    public queryMask: QueryMask,
+    public removeOnEmpty: boolean
+  ) {}
 
   /**
    * Subscribe for onEntityAdd event
@@ -139,7 +120,7 @@ export class Query {
    * @param entityId - entity id
    */
   add(entityId: number): void {
-    this.entities.add(entityId);
+    // this.entities.add(entityId);
     this.events.emit(Event.onEntityAdd, entityId);
   }
 
@@ -149,7 +130,7 @@ export class Query {
    * @param entityId - entity id
    */
   remove(entityId: number): void {
-    this.entities.delete(entityId);
+    // this.entities.delete(entityId);
     this.events.emit(Event.onEntityRemove, entityId);
     if (!this.entities.size) {
       this.events.emit(Event.onEmpty, entityId);
@@ -181,11 +162,9 @@ export class Query {
   }
 
   /**
-   * Decrease usage counter
-   * @returns is no one use this query
+   * release resources
    */
-  dispose(): boolean {
-    this.usageCounter -= 1;
-    return this.usageCounter === 0;
+  dispose(): void {
+    this.events.dispose();
   }
 }

@@ -20,6 +20,7 @@ describe('World tests', () => {
     expect(world.masks).toBeDefined();
     expect(world.registeredComponents).toBeDefined();
     expect(world.registeredComponents.size).toBe(RESERVED_MASK_INDICES.length);
+    expect(world.queryManager).toBeDefined();
   });
 
   it('Should throw error if entities limit is exceeded', () => {
@@ -144,11 +145,13 @@ describe('World tests', () => {
     world.addSystem(new TestSystem2());
 
     createEntities(world, ctors, TEST_ENTITIES_AMOUNT);
+    world.createQuery([TestComponent0, TestComponent1]);
 
     world.destroy();
     expect(world.systems).toHaveLength(0);
     expect(world.entities).toHaveLength(0);
-    expect(world.queries).toHaveLength(0);
+    expect(world.queryManager.registry).toHaveLength(0);
+    expect(world.queryManager).toBeDefined();
   });
 
   it('Should destroy systems before free entities', () => {
@@ -165,7 +168,7 @@ describe('World tests', () => {
     world.destroy();
     expect(world.systems).toHaveLength(0);
     expect(world.entities).toHaveLength(0);
-    expect(world.queries).toHaveLength(0);
+    expect(world.queryManager).toBeDefined();
   });
 
   it('Query filtered array of entities', () => {
