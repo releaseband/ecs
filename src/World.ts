@@ -299,6 +299,16 @@ export class World {
   }
 
   /**
+   * Remove multiple queries
+   *
+   * @param query - query object to remove
+   */
+  public removeQueries(components: Components): void {
+    const queryMask = this.createQueryMask(components);
+    this.queryManager.removeQueries(queryMask);
+  }
+
+  /**
    * @param name - entity name
    * @returns entity id
    */

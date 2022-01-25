@@ -104,6 +104,19 @@ export default class QueryManager {
     }
   }
 
+  /**
+   * Remove multiple queries
+   *
+   * @param queryMask - query mask
+   *
+   */
+  public removeQueries(queryMask: QueryMask): void {
+    const entry = this.getRegistryEntry(queryMask);
+    if (entry) {
+      entry.queries.forEach((query) => this.removeQuery(query));
+    }
+  }
+
   public removeEntity(entityId: number): void {
     this.registry.forEach((entry) => {
       if (entry.entities.has(entityId)) {
