@@ -848,5 +848,18 @@ describe('Query tests', () => {
       expect(world.getQueries([TestComponent0, TEST_TAG0])).toHaveLength(1);
       expect(world.getQueries([TestComponent2])).toHaveLength(0);
     });
+
+    it('Shortcut for removing multiple queries', () => {
+      const world = new World(ENTITIES_COUNT);
+      world.registerComponent(TestComponent0);
+      world.registerTags([TEST_TAG0]);
+
+      world.createQuery([TestComponent0, TEST_TAG0]);
+      world.createQuery([TEST_TAG0, TestComponent0]);
+
+      expect(world.getQueries([TestComponent0, TEST_TAG0])).toHaveLength(2);
+      world.removeQueries([TestComponent0, TEST_TAG0]);
+      expect(world.getQueries([TestComponent0, TEST_TAG0])).toHaveLength(0);
+    });
   });
 });
