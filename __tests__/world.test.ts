@@ -72,7 +72,7 @@ describe('World tests', () => {
     expect(() => world.registerComponent(TestComponent0)).toThrow();
   });
 
-  it('removeEntities should remove array of entities', () => {
+  it('Should remove Array|Set of entities', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
     world.registerComponent(TestComponent1);
@@ -83,6 +83,44 @@ describe('World tests', () => {
     expect(world.entities).toHaveLength(TEST_ENTITIES_AMOUNT);
     expect(entities).toHaveLength(TEST_ENTITIES_AMOUNT);
     world.removeEntities(entities);
+    expect(world.entities).toHaveLength(0);
+    expect(world.pool).toHaveLength(TEST_ENTITIES_AMOUNT);
+
+    const entitiesSet = new Set(
+      createEntities(world, ctors, TEST_ENTITIES_AMOUNT)
+    );
+
+    expect(world.entities).toHaveLength(TEST_ENTITIES_AMOUNT);
+    expect(entities).toHaveLength(TEST_ENTITIES_AMOUNT);
+    world.removeEntities(entitiesSet);
+    expect(world.entities).toHaveLength(0);
+    expect(world.pool).toHaveLength(TEST_ENTITIES_AMOUNT);
+  });
+
+  it('Should remove entities filtered by mask', () => {
+    const world = new World(ENTITIES_COUNT);
+    world.registerComponent(TestComponent0);
+    world.registerComponent(TestComponent1);
+    const ctors = [TestComponent0, TestComponent1];
+
+    createEntities(world, ctors, TEST_ENTITIES_AMOUNT);
+
+    expect(world.entities).toHaveLength(TEST_ENTITIES_AMOUNT);
+    world.removeEntitiesByMask(ctors);
+    expect(world.entities).toHaveLength(0);
+    expect(world.pool).toHaveLength(TEST_ENTITIES_AMOUNT);
+  });
+
+  it('Should filter and remove all entities(empty mask)', () => {
+    const world = new World(ENTITIES_COUNT);
+    world.registerComponent(TestComponent0);
+    world.registerComponent(TestComponent1);
+    const ctors = [TestComponent0, TestComponent1];
+
+    createEntities(world, ctors, TEST_ENTITIES_AMOUNT);
+
+    expect(world.entities).toHaveLength(TEST_ENTITIES_AMOUNT);
+    world.removeEntitiesByMask([]);
     expect(world.entities).toHaveLength(0);
     expect(world.pool).toHaveLength(TEST_ENTITIES_AMOUNT);
   });
