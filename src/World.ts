@@ -301,7 +301,7 @@ export class World {
   /**
    * Remove multiple queries
    *
-   * @param query - query object to remove
+   * @param components - array of components|tags
    */
   public removeQueries(components: Components): void {
     const queryMask = this.createQueryMask(components);
@@ -354,6 +354,16 @@ export class World {
    */
   public removeEntities(entities: Array<number> | Set<number>): void {
     entities.forEach((entityId: number) => this.removeEntity(entityId));
+  }
+
+  /**
+   * Query and remove entities from world
+   *
+   * @param components - array of components|tags
+   */
+  public removeEntitiesByMask(components: Components): void {
+    const entities = this.queryEntities(components);
+    this.removeEntities(entities);
   }
 
   /**
