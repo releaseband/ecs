@@ -1,5 +1,5 @@
 {
-  "extends": "@releaseband/typescript-config/tsconfig.json",
+  "extends": "./tsconfig.legacy.json",
   "compilerOptions": {
     "noEmit": false,
     "module": "commonjs",
