@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/dot-notation */
 import { RESERVED_MASK_INDICES, World } from '../src/World';
 import { TestComponent0, TestComponent1 } from './util/components';
 import { createEntities } from './util/helpers';
@@ -50,12 +51,8 @@ describe('World tests', () => {
     world.registerComponent(TestComponent0);
     world.registerComponent(TestComponent1);
     expect(world.registeredComponents.size).toBe(RESERVED_INDICES + 2);
-    expect(world.getComponentIndex(TestComponent0)).toEqual(
-      RESERVED_INDICES + 0
-    );
-    expect(world.getComponentIndex(TestComponent1)).toEqual(
-      RESERVED_INDICES + 1
-    );
+    expect(world.getComponentIndex(TestComponent0)).toEqual(RESERVED_INDICES + 0);
+    expect(world.getComponentIndex(TestComponent1)).toEqual(RESERVED_INDICES + 1);
   });
 
   it('Should throw error for non-registered component', () => {
@@ -86,9 +83,7 @@ describe('World tests', () => {
     expect(world.entities).toHaveLength(0);
     expect(world.pool).toHaveLength(TEST_ENTITIES_AMOUNT);
 
-    const entitiesSet = new Set(
-      createEntities(world, ctors, TEST_ENTITIES_AMOUNT)
-    );
+    const entitiesSet = new Set(createEntities(world, ctors, TEST_ENTITIES_AMOUNT));
 
     expect(world.entities).toHaveLength(TEST_ENTITIES_AMOUNT);
     expect(entities).toHaveLength(TEST_ENTITIES_AMOUNT);
@@ -186,7 +181,8 @@ describe('World tests', () => {
     world.createQuery([TestComponent0, TestComponent1]);
 
     world.destroy();
-    expect(world.systems).toHaveLength(0);
+    expect(world.systemsManager['systems']).toHaveLength(0);
+    expect(world.systemsManager['groups'].size).toBe(0);
     expect(world.entities).toHaveLength(0);
     expect(world.queryManager.registry).toHaveLength(0);
     expect(world.queryManager).toBeDefined();
@@ -204,7 +200,8 @@ describe('World tests', () => {
     expect(world.entities).toHaveLength(TEST_ENTITIES_AMOUNT + 1);
 
     world.destroy();
-    expect(world.systems).toHaveLength(0);
+    expect(world.systemsManager['systems']).toHaveLength(0);
+    expect(world.systemsManager['groups'].size).toBe(0);
     expect(world.entities).toHaveLength(0);
     expect(world.queryManager).toBeDefined();
   });

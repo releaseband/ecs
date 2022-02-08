@@ -1,4 +1,4 @@
-import { Constructor } from '../../src/Helpers';
+import { Constructor } from '../../src/types';
 import { World } from '../../src/World';
 
 // eslint-disable-next-line import/prefer-default-export

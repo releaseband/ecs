@@ -1,11 +1,13 @@
 import FastBitSet from 'fastbitset';
 
 import EventsEmitter from './EventsEmitter';
-import { Component, Components, Constructor, getEntityMask } from './Helpers';
+import { getEntityMask } from './Helpers';
 import { Query } from './Query';
 import QueryManager from './QueryManager';
 import QueryMask from './QueryMask';
 import { System } from './System';
+import SystemsManager from './SystemsManager';
+import { Component, Components, Constructor, DebugData } from './types';
 
 export const RESERVED_TAGS = {
   ALIVE: '_reserved_entity_alive_tag_',
@@ -14,15 +16,7 @@ export const RESERVED_TAGS = {
   NAME_INDEX: 1,
 } as const;
 
-export const RESERVED_MASK_INDICES = [
-  RESERVED_TAGS.ALIVE_INDEX,
-  RESERVED_TAGS.NAME_INDEX,
-] as const;
-
-export type DebugData = {
-  updateTime: number;
-  updateTimeDetailed: Map<string, number>;
-};
+export const RESERVED_MASK_INDICES = [RESERVED_TAGS.ALIVE_INDEX, RESERVED_TAGS.NAME_INDEX] as const;
 
 export class World {
   public nextId = 0;
@@ -35,13 +29,13 @@ export class World {
 
   public readonly masks: Array<FastBitSet> = [];
 
-  public queryManager: QueryManager;
+  public readonly queryManager: QueryManager;
+
+  public readonly systemsManager = new SystemsManager();
 
   public readonly lookupTable: Int32Array;
 
   public readonly registeredComponents: Map<string, number> = new Map();
-
-  public systems: Array<System> = [];
 
   public readonly events = new EventsEmitter();
 
@@ -261,9 +255,7 @@ export class World {
    */
   public queryEntities(components: Components): Array<number> {
     const queryMask = this.createQueryMask(components);
-    return this.entities.filter((entityId) =>
-      queryMask.match(getEntityMask(entityId, this.masks))
-    );
+    return this.entities.filter((entityId) => queryMask.match(getEntityMask(entityId, this.masks)));
   }
 
   /**
@@ -427,9 +419,7 @@ export class World {
     const mask = getEntityMask(entityId, this.masks);
     if (mask.has(componentIndex)) {
       if (!forceAdd) {
-        throw new Error(
-          `Entity ${entityId} already has component ${ctor.name}`
-        );
+        throw new Error(`Entity ${entityId} already has component ${ctor.name}`);
       }
       this.removeFromMask(entityId, componentIndex);
     }
@@ -486,88 +476,49 @@ export class World {
   }
 
   /**
+   * Create empty systems group(s)
+   *
+   * @param groups - names
+   * @throws Will throw an error if group already exist
+   */
+  public createGroups(groups: ReadonlyArray<string>): void {
+    groups.forEach((groupName) => this.systemsManager.createGroup(groupName));
+  }
+
+  /**
+   * Remove systems group
+   *
+   * @param groupName - group name
+   */
+  public removeGroup(groupName: string): void {
+    this.systemsManager.removeGroup(groupName);
+  }
+
+  /**
    * Add system class instance to world
    *
    * @param system - system class instance
+   * @param groupName - [optional] group name
    */
-  public addSystem(system: System): void {
-    this.systems.push(system);
+  public addSystem(system: System, groupName?: string): void {
+    this.systemsManager.addSystem(system, groupName);
   }
 
   /**
    * Remove system from world
    *
    * @param ctor - system class constructor
+   * @param groupName - [optional] group name
    */
-  public removeSystem(ctor: Constructor<System>): void {
-    this.systems = this.systems.filter((system) => {
-      const isExist = system.constructor.name === ctor.name;
-      if (isExist && system.exit) {
-        system.exit();
-      }
-      return !isExist;
-    });
+  public removeSystem(ctor: Constructor<System>, groupName?: string): void {
+    this.systemsManager.removeSystem(ctor, groupName);
   }
 
   /**
    * Remove all systems from world
    */
   public removeAllSystems(): void {
-    this.systems.forEach((system) => {
-      if (system.exit) {
-        system.exit();
-      }
-    });
-    this.systems.length = 0;
-  }
-
-  /**
-   * destroy whole world:
-   * - remove all entities
-   * - call exit for all systems
-   * - remove systems
-   */
-  public destroy(): void {
-    this.removeAllSystems();
-    this.queryManager.dispose();
-    this.clear();
-  }
-
-  /**
-   * Iterate through added systems and call update method on each system
-   *
-   * see {@link System}
-   *
-   * @param dt - delta time
-   */
-  private normalUpdate(dt: number): void {
-    this.systems.forEach((system) => {
-      if (system.update) {
-        system.update(dt);
-      }
-    });
-  }
-
-  /**
-   * Iterate through systems, call update and store execution time
-   *
-   * see {@link System}
-   *
-   * @param dt - delta time
-   */
-  private debugUpdate(dt: number): void {
-    const updateTimeStart = performance.now();
-    this.systems.forEach((system) => {
-      if (system.update) {
-        const start = performance.now();
-        system.update(dt);
-        this.debugData.updateTimeDetailed.set(
-          system.constructor.name,
-          performance.now() - start
-        );
-      }
-    });
-    this.debugData.updateTime = performance.now() - updateTimeStart;
+    this.systemsManager.dispose();
   }
 
   /**
@@ -582,5 +533,27 @@ export class World {
    */
   public disableDebugMode(): void {
     this.update = this.normalUpdate;
+  }
+
+  private normalUpdate(dt: number): void {
+    this.systemsManager.normalUpdate(dt);
+  }
+
+  private debugUpdate(dt: number): void {
+    const updateTimeStart = performance.now();
+    this.systemsManager.debugUpdate(dt, this.debugData.updateTimeDetailed);
+    this.debugData.updateTime = performance.now() - updateTimeStart;
+  }
+
+  /**
+   * destroy whole world:
+   * - remove all entities
+   * - call exit for all systems
+   * - remove systems
+   */
+  public destroy(): void {
+    this.removeAllSystems();
+    this.queryManager.dispose();
+    this.clear();
   }
 }

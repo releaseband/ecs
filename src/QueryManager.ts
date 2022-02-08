@@ -53,9 +53,7 @@ export default class QueryManager {
    * @returns is query used
    */
   public hasQuery(query: Query): boolean {
-    const isQueryExist = this.registry.find((entry) =>
-      entry.queries.has(query)
-    );
+    const isQueryExist = this.registry.find((entry) => entry.queries.has(query));
     return !!isQueryExist;
   }
 
@@ -67,8 +65,7 @@ export default class QueryManager {
    * @returns new query instance
    */
   public createQuery(queryMask: QueryMask, removeOnEmpty: boolean): Query {
-    const entry =
-      this.getRegistryEntry(queryMask) || this.createEntry(queryMask);
+    const entry = this.getRegistryEntry(queryMask) || this.createEntry(queryMask);
     const query = new Query(entry.entities, queryMask, removeOnEmpty);
     entry.queries.add(query);
     this.entities.forEach((entityId) => {

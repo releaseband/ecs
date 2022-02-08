@@ -93,20 +93,10 @@ describe('Query tests', () => {
     world.registerComponent(TestComponent1);
     world.registerComponent(TestComponent2);
 
-    const query = world.createQuery([
-      TestComponent0,
-      TestComponent1,
-      TestComponent2,
-    ]);
-    expect(
-      query.queryMask.mask.has(world.getComponentIndex(TestComponent0))
-    ).toBe(true);
-    expect(
-      query.queryMask.mask.has(world.getComponentIndex(TestComponent1))
-    ).toBe(true);
-    expect(
-      query.queryMask.mask.has(world.getComponentIndex(TestComponent2))
-    ).toBe(true);
+    const query = world.createQuery([TestComponent0, TestComponent1, TestComponent2]);
+    expect(query.queryMask.mask.has(world.getComponentIndex(TestComponent0))).toBe(true);
+    expect(query.queryMask.mask.has(world.getComponentIndex(TestComponent1))).toBe(true);
+    expect(query.queryMask.mask.has(world.getComponentIndex(TestComponent2))).toBe(true);
 
     const entity = world.createEntity();
     world.addComponent(entity, new TestComponent0());
@@ -364,10 +354,7 @@ describe('Query tests', () => {
     const callback = () => {
       value += 1;
     };
-    world
-      .createQuery([TestComponent0])
-      .onAddSubscribe(callback)
-      .onRemoveSubscribe(callback);
+    world.createQuery([TestComponent0]).onAddSubscribe(callback).onRemoveSubscribe(callback);
 
     const entity = world.createEntity();
     world.addComponent(entity, new TestComponent0());
@@ -445,11 +432,9 @@ describe('Query tests', () => {
     world.registerComponent(TestComponent1);
 
     let value = 0;
-    const query = world
-      .createQuery([TestComponent0, TestComponent1])
-      .onAddSubscribe(() => {
-        value += 1;
-      });
+    const query = world.createQuery([TestComponent0, TestComponent1]).onAddSubscribe(() => {
+      value += 1;
+    });
 
     {
       const entity = world.createEntity();
@@ -481,13 +466,11 @@ describe('Query tests', () => {
     world.addComponent(entity1, new TestComponent1());
 
     let isEntity1Exist = true;
-    const query0 = world
-      .createQuery([TestComponent0, TestComponent1])
-      .onRemoveSubscribe(() => {
-        world.removeQuery(query0);
-        const query1 = world.createQuery([TestComponent0, TestComponent1]);
-        isEntity1Exist = query1.entities.has(entity1);
-      });
+    const query0 = world.createQuery([TestComponent0, TestComponent1]).onRemoveSubscribe(() => {
+      world.removeQuery(query0);
+      const query1 = world.createQuery([TestComponent0, TestComponent1]);
+      isEntity1Exist = query1.entities.has(entity1);
+    });
     world.removeEntity(entity1);
     expect(isEntity1Exist).toBeFalsy();
   });
@@ -548,10 +531,7 @@ describe('Query tests', () => {
     const callback = () => {
       isEmptyTriggerCount += 1;
     };
-    world
-      .createQuery(ctors)
-      .onEmptySubscribe(callback)
-      .onEmptyUnsubscribe(callback);
+    world.createQuery(ctors).onEmptySubscribe(callback).onEmptyUnsubscribe(callback);
     createEntities(world, ctors, 100);
     world.clear();
     expect(isEmptyTriggerCount).toBe(0);
@@ -592,9 +572,7 @@ describe('Query tests', () => {
     it('on components remove', () => {
       const query = world.createQuery(ctors, true);
       const entities = createEntities(world, ctors, 50);
-      entities.forEach((entity) =>
-        world.removeComponent(entity, TestComponent0)
-      );
+      entities.forEach((entity) => world.removeComponent(entity, TestComponent0));
       expect(world.queryManager.hasQuery(query)).toBeFalsy();
       expect(world.queryManager.registry).toHaveLength(0);
     });
@@ -719,10 +697,7 @@ describe('Query tests', () => {
       world.addTag(entity5, TEST_TAG2);
       world.addTag(entity5, TEST_TAG3);
 
-      const isEqual = (
-        entities: ReadonlyArray<number>,
-        ref: ReadonlyArray<number>
-      ): void => {
+      const isEqual = (entities: ReadonlyArray<number>, ref: ReadonlyArray<number>): void => {
         expect(entities).toEqual(ref);
         expect(entities).toHaveLength(ref.length);
       };

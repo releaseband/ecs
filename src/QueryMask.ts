@@ -10,10 +10,7 @@ export default class QueryMask {
    * @returns is entity mask matches with query
    */
   match(entityMask: FastBitSet): boolean {
-    return (
-      !this.mask.difference_size(entityMask) &&
-      !this.notMask.intersection_size(entityMask)
-    );
+    return !this.mask.difference_size(entityMask) && !this.notMask.intersection_size(entityMask);
   }
 
   /**
@@ -22,8 +19,6 @@ export default class QueryMask {
    * @returns is queries equal
    */
   equal(queryMask: QueryMask): boolean {
-    return (
-      queryMask.mask.equals(this.mask) && queryMask.notMask.equals(this.notMask)
-    );
+    return queryMask.mask.equals(this.mask) && queryMask.notMask.equals(this.notMask);
   }
 }
