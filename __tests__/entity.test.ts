@@ -1,9 +1,5 @@
 import { RESERVED_MASK_INDICES, RESERVED_TAGS, World } from '../src/World';
-import {
-  TestComponent0,
-  TestComponent1,
-  TestComponent2,
-} from './util/components';
+import { TestComponent0, TestComponent1, TestComponent2 } from './util/components';
 
 const ENTITIES_COUNT = 1_000_000;
 
@@ -70,9 +66,7 @@ describe('Entities tests', () => {
     const world = new World(ENTITIES_COUNT);
     const name = 'TEST_NAME';
     world.createEntity('TEST_NAME');
-    expect(() => world.createEntity('TEST_NAME')).toThrow(
-      `Entity with name ${name} already exist`
-    );
+    expect(() => world.createEntity('TEST_NAME')).toThrow(`Entity with name ${name} already exist`);
   });
 
   it('Create multiple entity', () => {
@@ -110,9 +104,7 @@ describe('Entities tests', () => {
   it('Should throw error on remove if entity not exist', () => {
     const world = new World(ENTITIES_COUNT);
     const entityId = 555;
-    expect(() => world.removeEntity(entityId)).toThrow(
-      `Entity ${entityId} does not exist`
-    );
+    expect(() => world.removeEntity(entityId)).toThrow(`Entity ${entityId} does not exist`);
   });
 
   it('Add component', () => {
@@ -123,9 +115,7 @@ describe('Entities tests', () => {
     const component = new TestComponent0();
     const componentIndex = world.getComponentIndex(TestComponent0);
     world.addComponent(entity, component);
-    expect(world.components[entity]).toHaveLength(
-      RESERVED_MASK_INDICES.length + 1
-    );
+    expect(world.components[entity]).toHaveLength(RESERVED_MASK_INDICES.length + 1);
     expect(world.components[entity]?.[componentIndex]).toEqual(component);
     expect(world.masks[entity]?.has(componentIndex)).toBe(true);
   });
@@ -289,12 +279,8 @@ describe('Entities tests', () => {
 
     expect(() => world.hasComponent(entity, TestComponent0)).toThrow(errorMsg);
     expect(() => world.getComponent(entity, TestComponent0)).toThrow(errorMsg);
-    expect(() => world.addComponent(entity, new TestComponent0())).toThrow(
-      errorMsg
-    );
-    expect(() => world.addComponent(entity, new TestComponent0())).toThrow(
-      errorMsg
-    );
+    expect(() => world.addComponent(entity, new TestComponent0())).toThrow(errorMsg);
+    expect(() => world.addComponent(entity, new TestComponent0())).toThrow(errorMsg);
   });
 
   it('Should throw error if component already exist', () => {

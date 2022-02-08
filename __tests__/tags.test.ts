@@ -10,18 +10,10 @@ describe('Tags tests', () => {
     const RESERVED_INDICES = RESERVED_MASK_INDICES.length;
     world.registerComponent(TestComponent0);
     world.registerTags(TAGS);
-    expect(world.registeredComponents.get(TestComponent0.name)).toEqual(
-      RESERVED_INDICES + 0
-    );
-    expect(world.registeredComponents.get(TEST_TAG0)).toEqual(
-      RESERVED_INDICES + 1
-    );
-    expect(world.registeredComponents.get(TEST_TAG1)).toEqual(
-      RESERVED_INDICES + 2
-    );
-    expect(world.registeredComponents.get(TEST_TAG2)).toEqual(
-      RESERVED_INDICES + 3
-    );
+    expect(world.registeredComponents.get(TestComponent0.name)).toEqual(RESERVED_INDICES + 0);
+    expect(world.registeredComponents.get(TEST_TAG0)).toEqual(RESERVED_INDICES + 1);
+    expect(world.registeredComponents.get(TEST_TAG1)).toEqual(RESERVED_INDICES + 2);
+    expect(world.registeredComponents.get(TEST_TAG2)).toEqual(RESERVED_INDICES + 3);
   });
 
   it('Add,remove and has tags', () => {
@@ -30,11 +22,9 @@ describe('Tags tests', () => {
     world.registerTags(TAGS);
 
     let value = 0;
-    const query = world
-      .createQuery([TestComponent0, TEST_TAG0, TEST_TAG1])
-      .onAddSubscribe(() => {
-        value += 1;
-      });
+    const query = world.createQuery([TestComponent0, TEST_TAG0, TEST_TAG1]).onAddSubscribe(() => {
+      value += 1;
+    });
 
     const entity = world.createEntity();
     world.addComponent(entity, new TestComponent0());
@@ -71,9 +61,7 @@ describe('Tags tests', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerTags(TAGS);
     const tag = 'NotRegisteredTag';
-    expect(() => world.createQuery(['tag0', tag])).toThrow(
-      `Tag ${tag} is not registered`
-    );
+    expect(() => world.createQuery(['tag0', tag])).toThrow(`Tag ${tag} is not registered`);
   });
 
   it('Add,remove, tag must throw error if tag not registered', () => {
@@ -81,15 +69,9 @@ describe('Tags tests', () => {
     world.registerTags(TAGS);
     const tag = 'NotRegisteredTag';
     const entity = world.createEntity();
-    expect(() => world.addTag(entity, tag)).toThrow(
-      `Tag ${tag} is not registered`
-    );
-    expect(() => world.removeTag(entity, tag)).toThrow(
-      `Tag ${tag} is not registered`
-    );
-    expect(() => world.hasTag(entity, tag)).toThrow(
-      `Tag ${tag} is not registered`
-    );
+    expect(() => world.addTag(entity, tag)).toThrow(`Tag ${tag} is not registered`);
+    expect(() => world.removeTag(entity, tag)).toThrow(`Tag ${tag} is not registered`);
+    expect(() => world.hasTag(entity, tag)).toThrow(`Tag ${tag} is not registered`);
   });
 
   it('Should throw error for already registered tag', () => {
