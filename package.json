@@ -4,8 +4,7 @@
   "description": "ecs",
   "author": "releaseband",
   "license": "MIT",
-  "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
+  "main": "src/index.ts",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "test": "jest --verbose",
