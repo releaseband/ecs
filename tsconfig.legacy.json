@@ -1,63 +1,64 @@
 {
-  "compilerOptions": {
-    // Language and Environment
-    "target": "ESNext",
-    "lib": ["DOM", "ESNext"],
-    "jsx": "react",
+  "extends": "@releaseband/typescript-config"
+  // "compilerOptions": {
+  //   // Language and Environment
+  //   "target": "ESNext",
+  //   "lib": ["DOM", "ESNext"],
+  //   "jsx": "react",
 
-    // Modules
-    "module": "ESNext",
-    // use Node's module resolution algorithm, instead of the legacy TS one
-    "moduleResolution": "Node",
+  //   // Modules
+  //   "module": "ESNext",
+  //   // use Node's module resolution algorithm, instead of the legacy TS one
+  //   "moduleResolution": "Node",
 
-    // Emit
-    // output .d.ts declaration files for consumers
-    "declaration": true,
-    "importHelpers": false,
-    "noEmit": true,
-    "removeComments": true,
-    // output .js.map sourcemap files for consumers
-    "sourceMap": true,
+  //   // Emit
+  //   // output .d.ts declaration files for consumers
+  //   "declaration": true,
+  //   "importHelpers": false,
+  //   "noEmit": true,
+  //   "removeComments": true,
+  //   // output .js.map sourcemap files for consumers
+  //   "sourceMap": true,
 
-    // JavaScript Support
-    "allowJs": false,
-    "checkJs": false,
+  //   // JavaScript Support
+  //   "allowJs": false,
+  //   "checkJs": false,
 
-    // Interop Constraints
-    // interop between ESM and CJS modules. Recommended by TS
-    "esModuleInterop": true,
-    // error out if import and file system have a casing mismatch. Recommended by TS
-    "forceConsistentCasingInFileNames": true,
+  //   // Interop Constraints
+  //   // interop between ESM and CJS modules. Recommended by TS
+  //   "esModuleInterop": true,
+  //   // error out if import and file system have a casing mismatch. Recommended by TS
+  //   "forceConsistentCasingInFileNames": true,
 
-    // Type Checking
-    // stricter type-checking for stronger correctness. Recommended by TS
-    "strict": true,
-    "alwaysStrict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "strictPropertyInitialization": true,
-    "strictFunctionTypes": true,
-    "noImplicitThis": true,
-    "strictBindCallApply": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "noUncheckedIndexedAccess": true,
+  //   // Type Checking
+  //   // stricter type-checking for stronger correctness. Recommended by TS
+  //   "strict": true,
+  //   "alwaysStrict": true,
+  //   "noImplicitAny": true,
+  //   "strictNullChecks": true,
+  //   "strictPropertyInitialization": true,
+  //   "strictFunctionTypes": true,
+  //   "noImplicitThis": true,
+  //   "strictBindCallApply": true,
+  //   "noPropertyAccessFromIndexSignature": true,
+  //   "noUncheckedIndexedAccess": true,
 
-    // linter checks for common issues
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    // noUnused* overlap with @typescript-eslint/no-unused-vars, can disable if duplicative
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+  //   // linter checks for common issues
+  //   "noImplicitReturns": true,
+  //   "noFallthroughCasesInSwitch": true,
+  //   // noUnused* overlap with @typescript-eslint/no-unused-vars, can disable if duplicative
+  //   "noUnusedLocals": true,
+  //   "noUnusedParameters": true,
 
-    "allowUnreachableCode": false,
-    "allowUnusedLabels": false,
+  //   "allowUnreachableCode": false,
+  //   "allowUnusedLabels": false,
 
-    "exactOptionalPropertyTypes": true,
-    "noImplicitOverride": true,
-    "useUnknownInCatchVariables": true,
+  //   "exactOptionalPropertyTypes": true,
+  //   "noImplicitOverride": true,
+  //   "useUnknownInCatchVariables": true,
 
-    // Completeness
-    // significant perf increase by skipping checking .d.ts files, particularly those in node_modules. Recommended by TS
-    "skipLibCheck": true
-  }
+  //   // Completeness
+  //   // significant perf increase by skipping checking .d.ts files, particularly those in node_modules. Recommended by TS
+  //   "skipLibCheck": true
+  // }
 }

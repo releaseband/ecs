@@ -41,8 +41,6 @@ export class World {
 
   public readonly names = new Map<string, number>();
 
-  public update: (dt: number) => void = this.normalUpdate;
-
   public debugData: DebugData = {
     updateTime: 0,
     updateTimeDetailed: new Map(),
@@ -408,13 +406,10 @@ export class World {
    * @throws will throw an error if entity does not exist
    * @throws will throw error if component exist
    */
-  public addComponent<T extends unknown>(
-    entityId: number,
-    component: NonNullable<T>,
-    forceAdd = false
-  ): T {
+  public addComponent<T>(entityId: number, component: NonNullable<T>, forceAdd = false): T {
     this.hasEntity(entityId, true);
-    const ctor = Object.getPrototypeOf(component).constructor;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const ctor = Object.getPrototypeOf(component).constructor as Constructor<unknown>;
     const componentIndex = this.getComponentIndex(ctor);
     const mask = getEntityMask(entityId, this.masks);
     if (mask.has(componentIndex)) {
@@ -535,15 +530,17 @@ export class World {
     this.update = this.normalUpdate;
   }
 
-  private normalUpdate(dt: number): void {
+  private normalUpdate = (dt: number): void => {
     this.systemsManager.normalUpdate(dt);
-  }
+  };
 
-  private debugUpdate(dt: number): void {
+  private debugUpdate = (dt: number): void => {
     const updateTimeStart = performance.now();
     this.systemsManager.debugUpdate(dt, this.debugData.updateTimeDetailed);
     this.debugData.updateTime = performance.now() - updateTimeStart;
-  }
+  };
+
+  public update: (dt: number) => void = this.normalUpdate;
 
   /**
    * destroy whole world:
