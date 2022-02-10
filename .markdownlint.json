@@ -1,0 +1,3 @@
+{
+  "extends": "@releaseband/markdownlint-config"
+}

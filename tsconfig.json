@@ -1,14 +1,15 @@
 {
-  "extends": "./tsconfig.legacy.json",
+  // "extends": "./tsconfig.legacy.json",
+  "extends": "@releaseband/typescript-config",
   "compilerOptions": {
     "noEmit": false,
     "module": "commonjs",
     "outDir": "dist",
-    "target": "es6",
-    "typeRoots": ["node_modules/@types"],
-    "paths": {
-      "fastbitset": ["./node_modules/@types/fastbitset/index.d.ts"]
-    }
+    "target": "es6"
+    // "typeRoots": ["node_modules/@types"],
+    // "paths": {
+    //   "fastbitset": ["./node_modules/@types/fastbitset/index.d.ts"]
+    // }
   },
   "include": [
     "src/**/*",

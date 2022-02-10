@@ -1,7 +1,5 @@
-dist
-bench
-coverage
 node_modules/
 .idea/
 .vscode/
 .history/
+CHANGELOG.md

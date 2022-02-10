@@ -13,6 +13,7 @@ declare global {
  * @returns FastBitSet instance {@link FastBitSet}
  * @throws
  */
+// eslint-disable-next-line import/prefer-default-export
 export const getEntityMask = (entityId: number, masks: Array<FastBitSet>): FastBitSet => {
   const mask = masks[entityId];
   if (!mask) {

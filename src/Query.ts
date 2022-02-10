@@ -15,7 +15,7 @@ export class Query {
   constructor(
     public readonly entities: Set<number>,
     public queryMask: QueryMask,
-    public removeOnEmpty: boolean
+    public removeOnEmpty: boolean,
   ) {}
 
   /**
@@ -27,7 +27,9 @@ export class Query {
   onAddSubscribe(callback: CallableFunction, noEmitOnSubscribe = false): Query {
     this.events.on(Event.onEntityAdd, callback);
     if (!noEmitOnSubscribe) {
-      this.entities.forEach((entity) => callback(entity));
+      this.entities.forEach((entity) => {
+        callback(entity);
+      });
     }
     return this;
   }

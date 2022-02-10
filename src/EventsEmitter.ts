@@ -22,7 +22,7 @@ export default class EventsEmitter {
     if (listeners) {
       this.events.set(
         event,
-        listeners.filter((listener) => listener.callback !== callback)
+        listeners.filter((listener) => listener.callback !== callback),
       );
     }
     return this;
@@ -31,10 +31,12 @@ export default class EventsEmitter {
   emit(event: string, ...args: unknown[]): void {
     const listeners = this.events.get(event);
     if (listeners) {
-      listeners.forEach((listener) => listener.callback(...args));
+      listeners.forEach((listener) => {
+        listener.callback(...args);
+      });
       this.events.set(
         event,
-        listeners.filter((listener) => !listener.once)
+        listeners.filter((listener) => !listener.once),
       );
     }
   }

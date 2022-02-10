@@ -59,7 +59,7 @@ describe('World tests', () => {
     const world = new World(ENTITIES_COUNT);
 
     expect(() => world.getComponentIndex(TestComponent0)).toThrow(
-      `Component ${TestComponent0.name} is not registered`
+      `Component ${TestComponent0.name} is not registered`,
     );
   });
 
