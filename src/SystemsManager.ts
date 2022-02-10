@@ -131,7 +131,7 @@ export default class SystemsManager {
           system.update(dt);
           data.set(`${groupName}_${system.constructor.name}`, performance.now() - start);
         }
-      })
+      }),
     );
     this.systems.forEach((system) => {
       if (system.update) {

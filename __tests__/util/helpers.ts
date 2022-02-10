@@ -5,7 +5,7 @@ import { World } from '../../src/World';
 export const createEntities = <T>(
   world: World,
   components: (Constructor<NonNullable<T>> | string)[],
-  amount: number
+  amount: number,
 ): Array<number> => {
   const entities = Array<number>();
   for (let i = 0; i < amount; i += 1) {

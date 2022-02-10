@@ -251,7 +251,7 @@ describe('Entities tests', () => {
     const component = new TestComponent1();
     const entity = world.createEntity();
     expect(() => world.addComponent(entity, component)).toThrow(
-      `Component ${component.constructor.name} is not registered`
+      `Component ${component.constructor.name} is not registered`,
     );
   });
 

@@ -1,8 +1,4 @@
-dist/
-coverage
 node_modules/
-.DS_Store
-Thumbs.db
 .idea/
 .vscode/
 .history/
@@ -11,3 +7,5 @@ Thumbs.db
 *.log
 yarn.lock
 pnpm-lock.yaml
+package-lock.json
+CHANGELOG.md

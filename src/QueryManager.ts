@@ -17,7 +17,7 @@ export default class QueryManager {
 
   constructor(
     private readonly entities: Array<number>,
-    private readonly masks: Array<FastBitSet>
+    private readonly masks: Array<FastBitSet>,
   ) {}
 
   /**

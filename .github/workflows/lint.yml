@@ -1,12 +1,13 @@
-name: Dev branch tests
+name: Lint
 
 on:
-  push:
+  pull_request:
     branches:
-      - develop
+      - main
+
 jobs:
-  test:
-    name: Test
+  release:
+    name: Lint
     runs-on: ubuntu-latest
 
     steps:
@@ -21,5 +22,5 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Test
-      - run: npm run test-ci
+      - name: Lint code
+        run: npm run lint
