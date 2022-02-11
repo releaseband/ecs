@@ -63,7 +63,7 @@
     "node": ">=16.0.0"
   },
   "files": [
-    "dist"
+    "src"
   ],
   "publishConfig": {
     "access": "public"
