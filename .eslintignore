@@ -1,7 +1,7 @@
-dist
-bench
-coverage
 node_modules/
+coverage/
+dist/
+bench/
 .idea/
 .vscode/
 .history/
