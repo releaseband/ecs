@@ -1,18 +1,4 @@
 {
   "extends": "@releaseband/typescript-config",
-  "compilerOptions": {
-    "noEmit": false,
-    "module": "commonjs",
-    "outDir": "dist",
-    "target": "es6"
-  },
-  "include": [
-    "src/**/*",
-    "__tests__/**/*",
-    ".eslintrc.js",
-    "prettier.config.js",
-    "commitlint.config.js",
-    "jest.config.js",
-    "jestPerformanceNowMock.js"
-  ]
+  "include": ["src/**/*", "__tests__/**/*", "jest.config.js", "jestPerformanceNowMock.js"]
 }
