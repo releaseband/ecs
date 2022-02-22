@@ -1,3 +1,10 @@
+## [0.2.2](https://github.com/releaseband/ecs/compare/v0.2.1...v0.2.2) (2022-02-22)
+
+
+### Bug Fixes
+
+* add parcel build ([b692f4f](https://github.com/releaseband/ecs/commit/b692f4f34bc8d9dccb9970cb87ccd261c0a6cb21))
+
 ## [0.2.1](https://github.com/releaseband/ecs/compare/v0.2.0...v0.2.1) (2022-02-11)
 
 
