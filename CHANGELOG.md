@@ -1,3 +1,10 @@
+## [0.2.3](https://github.com/releaseband/ecs/compare/v0.2.2...v0.2.3) (2022-03-24)
+
+
+### Bug Fixes
+
+* deps verions lock ([67a3145](https://github.com/releaseband/ecs/commit/67a3145ba9e39fb63d80204f87dd148f3dca3024))
+
 ## [0.2.2](https://github.com/releaseband/ecs/compare/v0.2.1...v0.2.2) (2022-02-22)
 
 
