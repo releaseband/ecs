@@ -1,10 +1,10 @@
-## [0.2.3](https://github.com/releaseband/ecs/compare/v0.2.2...v0.2.3) (2022-03-24)
-
 ## 0.2.4
 
 ### Patch Changes
 
 - 191b043: update dev deps and use changeset
+
+## [0.2.3](https://github.com/releaseband/ecs/compare/v0.2.2...v0.2.3) (2022-03-24)
 
 ### Bug Fixes
 
