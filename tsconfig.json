@@ -1,4 +1,4 @@
 {
   "extends": "@releaseband/typescript-config",
-  "include": ["src/**/*", "__tests__/**/*", "jest.config.js", "jestPerformanceNowMock.js"]
+  "include": ["src/**/*", "__tests__/**/*", "jest.config.js"]
 }

@@ -1,6 +1,6 @@
 {
   "name": "@releaseband/ecs",
-  "version": "0.0.0-semantic-release",
+  "version": "0.2.3",
   "description": "ecs",
   "author": "releaseband",
   "license": "MIT",
@@ -19,24 +19,28 @@
     "lint": "eslint --ext .js,.ts --fix .",
     "markdownlint": "markdownlint --fix '**/*.md'",
     "prepare": "is-ci || husky install",
-    "commit": "cz"
+    "commit": "cz",
+    "version": "changeset version",
+    "publish": "pnpm run build && changeset publish",
+    "changeset": "changeset"
   },
   "dependencies": {
     "@swc/helpers": "0.3.3",
     "fastbitset": "0.4.0"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "^0.4.4",
+    "@changesets/cli": "^2.22.0",
     "@commitlint/cli": "16.2.1",
     "@commitlint/cz-commitlint": "16.2.1",
     "@parcel/packager-ts": "2.3.2",
     "@parcel/transformer-typescript-types": "2.3.2",
-    "@releaseband/commitlint-config": "^1.0.2",
-    "@releaseband/eslint-config-typescript": "^1.0.5",
-    "@releaseband/lint-staged-config": "^1.0.2",
-    "@releaseband/markdownlint-config": "^2.0.2",
-    "@releaseband/prettier-config": "^1.0.3",
-    "@releaseband/semantic-release-npm-github-config": "^1.2.2",
-    "@releaseband/typescript-config": "^0.2.6",
+    "@releaseband/commitlint-config": "^1.0.3",
+    "@releaseband/eslint-config-typescript": "^1.0.7",
+    "@releaseband/lint-staged-config": "^1.0.3",
+    "@releaseband/markdownlint-config": "^2.0.3",
+    "@releaseband/prettier-config": "^1.0.4",
+    "@releaseband/typescript-config": "^0.2.8",
     "@swc/jest": "0.2.17",
     "@types/fastbitset": "0.2.0",
     "@types/jest": "27.4.0",
@@ -64,11 +68,14 @@
   "engines": {
     "browsers": "> 0.5%, last 2 versions, not dead"
   },
+  "volta": {
+    "node": "16.14.0"
+  },
   "files": [
     "dist"
   ],
   "publishConfig": {
-    "access": "public"
+    "registry": "https://npm.pkg.github.com"
   },
   "repository": {
     "type": "git",

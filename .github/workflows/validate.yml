@@ -1,13 +1,13 @@
-name: Release
+name: Lint
 
 on:
-  push:
+  pull_request:
     branches:
       - main
 
 jobs:
   release:
-    name: Publish & Deploy
+    name: Lint & Test
     runs-on: ubuntu-latest
 
     steps:
@@ -39,18 +39,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: 16
-          cache: pnpm
-          registry-url: 'https://npm.pkg.github.com'
+      - name: Lint
+        run: pnpm lint
 
-      - name: Create release PR or publish to npm
-        uses: changesets/action@v1
-        with:
-          version: pnpm run version
-          publish: pnpm run publish
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Test
+      #   run: pnpm test
