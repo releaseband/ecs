@@ -1,7 +1,6 @@
 import { Constructor } from '../../src/types';
 import { World } from '../../src/World';
 
-// eslint-disable-next-line import/prefer-default-export
 export const createEntities = <T>(
   world: World,
   components: (Constructor<NonNullable<T>> | string)[],
