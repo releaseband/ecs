@@ -1,5 +1,11 @@
 ## 0.2.4
 
+## 0.2.5
+
+### Patch Changes
+
+- 8098a15: update build tool and ci configs
+
 ### Patch Changes
 
 - 191b043: update dev deps and use changeset
