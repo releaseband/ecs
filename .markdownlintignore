@@ -5,3 +5,10 @@ dist/
 .history/
 .changeset/
 CHANGELOG.md
+coverage/
+build/
+.DS_Store
+Thumbs.db
+.parcel-cache/
+*.sublime-project
+*.sublime-workspace

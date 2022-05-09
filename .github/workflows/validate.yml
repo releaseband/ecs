@@ -40,10 +40,13 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm type-check
 
       - name: Lint
         run: pnpm lint
 
-      # - name: Test
-      #   run: pnpm test
+      - name: Test
+        run: pnpm test
