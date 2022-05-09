@@ -5,3 +5,7 @@ bench/
 .idea/
 .vscode/
 .history/
+build/
+.parcel-cache/
+*.sublime-project
+*.sublime-workspace
