@@ -291,4 +291,21 @@ describe('Entities tests', () => {
     world.addComponent(entity, new TestComponent0());
     expect(() => world.addComponent(entity, new TestComponent0())).toThrow();
   });
+
+  it('Zero index entity not popped from pool', () => {
+    const world = new World(ENTITIES_COUNT);
+    let entity0 = world.createEntity();
+    const entity1 = world.createEntity();
+    expect(world.hasEntity(entity0) && entity0 === 0).toBeTruthy();
+    expect(world.hasEntity(entity1) && entity1 === 1).toBeTruthy();
+    world.removeEntity(entity0);
+    entity0 = world.createEntity();
+    expect(world.hasEntity(entity0) && entity0 === 0).toBeTruthy();
+    expect(world.hasEntity(entity1) && entity1 === 1).toBeTruthy();
+    world.removeEntity(entity1);
+    expect(world.pool[0]).toEqual(entity1);
+    expect(world.entities[0]).toEqual(entity0);
+    expect(world.hasEntity(entity0)).toBeTruthy();
+    expect(world.hasEntity(entity1)).toBeFalsy();
+  });
 });
