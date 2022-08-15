@@ -1,5 +1,11 @@
 ## 0.2.4
 
+## 0.2.6
+
+### Patch Changes
+
+- ee759c6: zero index entity not popped from etities pool
+
 ## 0.2.5
 
 ### Patch Changes
