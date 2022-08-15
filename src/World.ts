@@ -374,7 +374,7 @@ export class World {
     mask.clear();
     const index = this.lookupTable[entityId] as number;
     const last = this.entities.pop();
-    if (last && index < this.entities.length) {
+    if (last !== undefined && index < this.entities.length) {
       this.entities[index] = last;
       this.lookupTable[last] = index;
     }
