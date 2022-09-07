@@ -1,5 +1,11 @@
 ## 0.2.4
 
+## 0.2.7
+
+### Patch Changes
+
+- 712d70f: fix add component type,ts version up
+
 ## 0.2.6
 
 ### Patch Changes
