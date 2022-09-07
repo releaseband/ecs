@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type Constructor<T> = new (...args: any[]) => T;
 
-export type ComponentInstance<T> = T extends object & NonNullable<T> ? T : never;
+export type ComponentInstance<T> = T extends object & { call?: never } ? T : never;
 
 export type Component = Constructor<unknown> | string;
 
