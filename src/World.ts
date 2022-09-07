@@ -7,7 +7,7 @@ import QueryManager from './QueryManager';
 import QueryMask from './QueryMask';
 import { System } from './System';
 import SystemsManager from './SystemsManager';
-import { Component, Components, Constructor, DebugData } from './types';
+import { Component, ComponentInstance, Components, Constructor, DebugData } from './types';
 
 export const RESERVED_TAGS = {
   ALIVE: '_reserved_entity_alive_tag_',
@@ -406,8 +406,15 @@ export class World {
    * @throws will throw an error if entity does not exist
    * @throws will throw error if component exist
    */
-  public addComponent<T>(entityId: number, component: NonNullable<T>, forceAdd = false): T {
+  public addComponent<T>(
+    entityId: number,
+    component: ComponentInstance<T>,
+    forceAdd = false,
+  ): ComponentInstance<T> {
     this.hasEntity(entityId, true);
+    if (typeof component !== 'object' || !component) {
+      throw new Error(`Component is non class instance`);
+    }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const ctor = Object.getPrototypeOf(component).constructor as Constructor<unknown>;
     const componentIndex = this.getComponentIndex(ctor);

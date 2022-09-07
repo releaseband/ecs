@@ -286,4 +286,11 @@ describe('World tests', () => {
       expect(debug.updateTimeDetailed.has(TestSystem0.name)).toBeFalsy();
     });
   });
+
+  it('Should throw error if component is non class instance', () => {
+    const world = new World(ENTITIES_COUNT);
+    world.registerComponent(TestComponent0);
+    const entity = world.createEntity();
+    expect(() => world.addComponent(entity, TestComponent0)).toThrow();
+  });
 });

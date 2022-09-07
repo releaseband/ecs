@@ -1,9 +1,9 @@
-import { Constructor } from '../../src/types';
+import { ComponentInstance, Constructor } from '../../src/types';
 import { World } from '../../src/World';
 
 export const createEntities = <T>(
   world: World,
-  components: (Constructor<NonNullable<T>> | string)[],
+  components: (Constructor<ComponentInstance<T>> | string)[],
   amount: number,
 ): Array<number> => {
   const entities = Array<number>();
