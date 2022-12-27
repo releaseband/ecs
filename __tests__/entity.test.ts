@@ -1,4 +1,4 @@
-import { RESERVED_MASK_INDICES, RESERVED_TAGS, World } from '../src/World';
+import { RESERVED_MASK_INDICES, RESERVED_TAG_ALIVE, RESERVED_TAG_NAME, World } from '../src/World';
 import { TestComponent0, TestComponent1, TestComponent2 } from './util/components';
 
 const ENTITIES_COUNT = 1_000_000;
@@ -15,8 +15,8 @@ describe('Entities tests', () => {
     expect(world.masks[entity]).toBeDefined();
     // set bits for reserved tags
     expect(world.masks[entity]?.size()).toEqual(RESERVED_MASK_INDICES.length);
-    expect(world.masks[entity]?.has(RESERVED_TAGS.ALIVE_INDEX)).toBeTruthy();
-    expect(world.masks[entity]?.has(RESERVED_TAGS.NAME_INDEX)).toBeTruthy();
+    expect(world.masks[entity]?.has(RESERVED_TAG_ALIVE[1])).toBeTruthy();
+    expect(world.masks[entity]?.has(RESERVED_TAG_NAME[1])).toBeTruthy();
     // set reserved tags values
     expect(world.components[entity]).toBeDefined();
     expect(world.components[entity]).toHaveLength(RESERVED_MASK_INDICES.length);
@@ -32,8 +32,8 @@ describe('Entities tests', () => {
     expect(world.names.has(name)).toBeFalsy();
     expect(world.getEntity(name)).toBeUndefined();
     // clear bitset on remove
-    expect(world.masks[entity]?.has(RESERVED_TAGS.ALIVE_INDEX)).toBeFalsy();
-    expect(world.masks[entity]?.has(RESERVED_TAGS.NAME_INDEX)).toBeFalsy();
+    expect(world.masks[entity]?.has(RESERVED_TAG_ALIVE[1])).toBeFalsy();
+    expect(world.masks[entity]?.has(RESERVED_TAG_NAME[1])).toBeFalsy();
     // empty components
     expect(world.components[entity]).toHaveLength(0);
   });
@@ -48,16 +48,16 @@ describe('Entities tests', () => {
     expect(world.masks[entity]?.size()).toEqual(RESERVED_MASK_INDICES.length);
     expect(world.components[entity]).toBeDefined();
     expect(world.components[entity]).toHaveLength(RESERVED_MASK_INDICES.length);
-    expect(world.masks[entity]?.has(RESERVED_TAGS.ALIVE_INDEX)).toBeTruthy();
-    expect(world.masks[entity]?.has(RESERVED_TAGS.NAME_INDEX)).toBeTruthy();
+    expect(world.masks[entity]?.has(RESERVED_TAG_ALIVE[1])).toBeTruthy();
+    expect(world.masks[entity]?.has(RESERVED_TAG_NAME[1])).toBeTruthy();
     expect(world.names.has(name)).toBeTruthy();
     expect(world.getEntity(name)).toEqual(entity);
 
     world.removeEntity(entity);
     expect(world.entities[entity]).toBeUndefined();
     expect(world.names.has(name)).toBeFalsy();
-    expect(world.masks[entity]?.has(RESERVED_TAGS.ALIVE_INDEX)).toBeFalsy();
-    expect(world.masks[entity]?.has(RESERVED_TAGS.NAME_INDEX)).toBeFalsy();
+    expect(world.masks[entity]?.has(RESERVED_TAG_ALIVE[1])).toBeFalsy();
+    expect(world.masks[entity]?.has(RESERVED_TAG_NAME[1])).toBeFalsy();
     expect(world.components[entity]).toHaveLength(0);
     expect(world.getEntity(name)).toBeUndefined();
   });

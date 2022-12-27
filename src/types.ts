@@ -15,3 +15,5 @@ export type DebugData = {
   updateTime: number;
   updateTimeDetailed: Map<string, number>;
 };
+
+export type ReservedTag = [name: string, index: number];

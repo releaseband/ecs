@@ -7,16 +7,19 @@ import QueryManager from './QueryManager';
 import QueryMask from './QueryMask';
 import { System } from './System';
 import SystemsManager from './SystemsManager';
-import { Component, ComponentInstance, Components, Constructor, DebugData } from './types';
+import {
+  Component,
+  ComponentInstance,
+  Components,
+  Constructor,
+  DebugData,
+  ReservedTag,
+} from './types';
 
-export const RESERVED_TAGS = {
-  ALIVE: '_reserved_entity_alive_tag_',
-  ALIVE_INDEX: 0,
-  NAME: '_reserved_entity_name_tag_',
-  NAME_INDEX: 1,
-} as const;
+export const RESERVED_TAG_ALIVE: ReservedTag = ['_reserved_entity_alive_tag_', 0];
+export const RESERVED_TAG_NAME: ReservedTag = ['_reserved_entity_name_tag_', 1];
 
-export const RESERVED_MASK_INDICES = [RESERVED_TAGS.ALIVE_INDEX, RESERVED_TAGS.NAME_INDEX] as const;
+export const RESERVED_MASK_INDICES = [RESERVED_TAG_ALIVE[1], RESERVED_TAG_NAME[1]] as const;
 
 export class World {
   public nextId = 0;
@@ -48,7 +51,7 @@ export class World {
 
   constructor(public entitiesMax: number) {
     this.lookupTable = new Int32Array(entitiesMax).fill(-1);
-    this.registerTags([RESERVED_TAGS.ALIVE, RESERVED_TAGS.NAME]);
+    this.registerTags([RESERVED_TAG_ALIVE[0], RESERVED_TAG_NAME[0]]);
     this.queryManager = new QueryManager(this.entities, this.masks);
   }
 
@@ -323,8 +326,8 @@ export class World {
     this.lookupTable[entityId] = this.entities.length;
     this.masks[entityId] = new FastBitSet(RESERVED_MASK_INDICES);
     const components = this.getEntityComponents(entityId);
-    components[RESERVED_TAGS.ALIVE_INDEX] = RESERVED_TAGS.ALIVE;
-    components[RESERVED_TAGS.NAME_INDEX] = name;
+    this.addTag(entityId, RESERVED_TAG_ALIVE[0]);
+    components[RESERVED_TAG_NAME[1]] = name;
     this.names.set(name, entityId);
     this.entities.push(entityId);
     return entityId;
@@ -365,10 +368,10 @@ export class World {
   public removeEntity(entityId: number): void {
     this.hasEntity(entityId, true);
     const mask = getEntityMask(entityId, this.masks);
-    mask.remove(RESERVED_TAGS.ALIVE_INDEX);
+    mask.remove(RESERVED_TAG_ALIVE[1]);
     this.queryManager.removeEntity(entityId);
     const components = this.getEntityComponents(entityId);
-    const name = components[RESERVED_TAGS.NAME_INDEX] as string;
+    const name = components[RESERVED_TAG_NAME[1]] as string;
     this.names.delete(name);
     this.components[entityId] = [];
     mask.clear();
