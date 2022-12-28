@@ -13,9 +13,18 @@ export const TAG_ALIVE = '_reserved_entity_alive_tag_';
 export const TAG_ALIVE_INDEX = 0;
 export const TAG_NAME = '_reserved_entity_name_tag_';
 export const TAG_NAME_INDEX = 1;
+export const TAG_PARENT = '_reserved_entity_parent_tag';
+export const TAG_PARENT_INDEX = 2;
+export const TAG_CHILDREN = '_reserved_entity_children_tag';
+export const TAG_CHILDREN_INDEX = 3;
 
-export const RESERVED_MASK_INDICES = [TAG_ALIVE_INDEX, TAG_NAME_INDEX] as const;
-export const RESERVED_MASK_NAMES = [TAG_ALIVE, TAG_NAME] as const;
+export const RESERVED_MASK_INDICES = [
+  TAG_ALIVE_INDEX,
+  TAG_NAME_INDEX,
+  TAG_PARENT_INDEX,
+  TAG_CHILDREN_INDEX,
+] as const;
+export const RESERVED_MASK_NAMES = [TAG_ALIVE, TAG_NAME, TAG_PARENT, TAG_CHILDREN] as const;
 
 export class World {
   public nextId = 0;
@@ -137,6 +146,12 @@ export class World {
     this.removeFromMask(entityId, tagIndex);
   }
 
+  /**
+   *
+   * @param component - component ctor or tag
+   * @returns index
+   * @throws error if is not registered
+   */
   private getRegisteredComponentIndex(component: Component): number {
     const name = typeof component === 'string' ? component : component.cachedComponentId;
     const index = this.registeredComponents.get(name);
@@ -175,6 +190,7 @@ export class World {
   }
 
   /**
+   * Is entity tag exist check
    *
    * @param tag - tag name
    * @returns is tag exist in the world
@@ -293,8 +309,30 @@ export class World {
     const components = this.getEntityComponents(entityId);
     components[TAG_ALIVE_INDEX] = TAG_ALIVE;
     components[TAG_NAME_INDEX] = name;
+    components[TAG_PARENT_INDEX] = null;
+    components[TAG_CHILDREN_INDEX] = new Set();
     this.names.set(name, entityId);
     this.entities.push(entityId);
+    return entityId;
+  }
+
+  /**
+   * Create child entity
+   *
+   * @param parentEntityId - parent entity id
+   * @returns child id
+   * @throws error if parent entity not exist
+   */
+  public createChildEntity(parentEntityId: number): number {
+    if (!this.hasEntity(parentEntityId)) {
+      throw new Error(`Entity ${parentEntityId} not exist`);
+    }
+    const entityId = this.createEntity();
+    const parentComponents = this.getEntityComponents(parentEntityId);
+    const children = parentComponents[TAG_CHILDREN_INDEX] as Set<number>;
+    children.add(entityId);
+    const childComponents = this.getEntityComponents(entityId);
+    childComponents[TAG_PARENT_INDEX] = parentEntityId;
     return entityId;
   }
 
@@ -332,10 +370,12 @@ export class World {
    */
   public removeEntity(entityId: number): void {
     this.hasEntity(entityId, true);
+    const components = this.getEntityComponents(entityId);
+    const children = components[TAG_CHILDREN_INDEX] as Set<number>;
+    this.removeEntities(children);
     const mask = getEntityMask(entityId, this.masks);
     mask.remove(TAG_ALIVE_INDEX);
     this.queryManager.removeEntity(entityId);
-    const components = this.getEntityComponents(entityId);
     const name = components[TAG_NAME_INDEX] as string;
     this.names.delete(name);
     this.components[entityId] = [];
@@ -348,6 +388,28 @@ export class World {
     }
     this.lookupTable[entityId] = -1;
     this.pool.push(entityId);
+  }
+
+  /**
+   * get parent id
+   *
+   * @param entityId - entity id
+   * @returns parent id or null
+   */
+  getParent(entityId: number): number | null {
+    const components = this.getEntityComponents(entityId);
+    return components[TAG_PARENT_INDEX] as number | null;
+  }
+
+  /**
+   * get entity children
+   *
+   * @param entityId - entity id
+   * @returns set of children
+   */
+  getChildren(entityId: number): Set<number> {
+    const components = this.getEntityComponents(entityId);
+    return components[TAG_CHILDREN_INDEX] as Set<number>;
   }
 
   /**
