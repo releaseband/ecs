@@ -9,14 +9,13 @@ import { System } from './System';
 import SystemsManager from './SystemsManager';
 import { Component, ComponentInstance, Components, Constructor, DebugData } from './types';
 
-export const RESERVED_TAGS = {
-  ALIVE: '_reserved_entity_alive_tag_',
-  ALIVE_INDEX: 0,
-  NAME: '_reserved_entity_name_tag_',
-  NAME_INDEX: 1,
-} as const;
+export const TAG_ALIVE = '_reserved_entity_alive_tag_';
+export const TAG_ALIVE_INDEX = 0;
+export const TAG_NAME = '_reserved_entity_name_tag_';
+export const TAG_NAME_INDEX = 1;
 
-export const RESERVED_MASK_INDICES = [RESERVED_TAGS.ALIVE_INDEX, RESERVED_TAGS.NAME_INDEX] as const;
+export const RESERVED_MASK_INDICES = [TAG_ALIVE_INDEX, TAG_NAME_INDEX] as const;
+export const RESERVED_MASK_NAMES = [TAG_ALIVE, TAG_NAME] as const;
 
 export class World {
   public nextId = 0;
@@ -48,7 +47,7 @@ export class World {
 
   constructor(public entitiesMax: number) {
     this.lookupTable = new Int32Array(entitiesMax).fill(-1);
-    this.registerTags([RESERVED_TAGS.ALIVE, RESERVED_TAGS.NAME]);
+    this.registerTags(RESERVED_MASK_NAMES);
     this.queryManager = new QueryManager(this.entities, this.masks);
   }
 
@@ -103,7 +102,7 @@ export class World {
   public addTag(entityId: number, ...tags: ReadonlyArray<string>): void {
     this.hasEntity(entityId, true);
     tags.forEach((tag) => {
-      const tagIndex = this.getTagIndex(tag);
+      const tagIndex = this.getRegisteredComponentIndex(tag);
       const components = this.getEntityComponents(entityId);
       if (components[tagIndex]) {
         this.removeTag(entityId, tag);
@@ -121,7 +120,7 @@ export class World {
    */
   public hasTag(entityId: number, tag: string): boolean {
     this.hasEntity(entityId, true);
-    const tagIndex = this.getTagIndex(tag);
+    const tagIndex = this.getRegisteredComponentIndex(tag);
     const components = this.getEntityComponents(entityId);
     return !!components[tagIndex];
   }
@@ -134,43 +133,15 @@ export class World {
    */
   public removeTag(entityId: number, tag: string): void {
     this.hasEntity(entityId, true);
-    const tagIndex = this.getTagIndex(tag);
+    const tagIndex = this.getRegisteredComponentIndex(tag);
     this.removeFromMask(entityId, tagIndex);
   }
 
-  getIndex(component: Component): number {
-    return typeof component === 'string'
-      ? this.getTagIndex(component)
-      : this.getComponentIndex(component);
-  }
-
-  /**
-   *
-   * @param componentName - component constructor name
-   * @returns registered component index
-   * @throws Will throw an error if component not registered
-   *
-   */
-  getComponentIndex<T>(ctor: Constructor<T>): number {
-    const index = this.registeredComponents.get(ctor.cachedComponentId);
+  private getRegisteredComponentIndex(component: Component): number {
+    const name = typeof component === 'string' ? component : component.cachedComponentId;
+    const index = this.registeredComponents.get(name);
     if (index === undefined) {
-      throw new Error(`Component ${ctor.name} is not registered`);
-    }
-    return index;
-  }
-
-  /**
-   * Get registered tag index
-   *
-   * @param tag - tag name
-   * @returns registered tag index
-   * @throws Will throw an error if tag not registered
-   *
-   */
-  getTagIndex(tag: string): number {
-    const index = this.registeredComponents.get(tag);
-    if (index === undefined) {
-      throw new Error(`Tag ${tag} is not registered`);
+      throw new Error(`Component or tag ${name} is not registered`);
     }
     return index;
   }
@@ -182,12 +153,9 @@ export class World {
    * @throws error if component already added
    */
   public registerComponent<T>(ctor: Constructor<T>): void {
-    if (this.registeredComponents.has(ctor.name)) {
-      throw Error(`Component ${ctor.name} already registered`);
-    }
+    this.registerComponentOrTag(ctor.name);
     // eslint-disable-next-line no-param-reassign
     ctor.cachedComponentId = ctor.name;
-    this.registeredComponents.set(ctor.name, this.registeredComponents.size);
   }
 
   /**
@@ -196,14 +164,14 @@ export class World {
    * @param tags - array of tags
    */
   public registerTags(tags: ReadonlyArray<string>): void {
-    let index = this.registeredComponents.size;
-    tags.forEach((tag) => {
-      if (this.registeredComponents.has(tag)) {
-        throw Error(`Tag ${tag} already registered`);
-      }
-      this.registeredComponents.set(tag, index);
-      index += 1;
-    });
+    tags.forEach((tagName) => this.registerComponentOrTag(tagName));
+  }
+
+  private registerComponentOrTag(componentName: string): void {
+    if (this.registeredComponents.has(componentName)) {
+      throw Error(`Component or Tag ${componentName} already registered`);
+    }
+    this.registeredComponents.set(componentName, this.registeredComponents.size);
   }
 
   /**
@@ -237,9 +205,9 @@ export class World {
 
     components.forEach((component) => {
       if (typeof component === 'object') {
-        notIndices.push(this.getIndex(component.component));
+        notIndices.push(this.getRegisteredComponentIndex(component.component));
       } else {
-        indices.push(this.getIndex(component));
+        indices.push(this.getRegisteredComponentIndex(component));
       }
     });
     return new QueryMask(new FastBitSet(indices), new FastBitSet(notIndices));
@@ -323,8 +291,8 @@ export class World {
     this.lookupTable[entityId] = this.entities.length;
     this.masks[entityId] = new FastBitSet(RESERVED_MASK_INDICES);
     const components = this.getEntityComponents(entityId);
-    components[RESERVED_TAGS.ALIVE_INDEX] = RESERVED_TAGS.ALIVE;
-    components[RESERVED_TAGS.NAME_INDEX] = name;
+    components[TAG_ALIVE_INDEX] = TAG_ALIVE;
+    components[TAG_NAME_INDEX] = name;
     this.names.set(name, entityId);
     this.entities.push(entityId);
     return entityId;
@@ -365,10 +333,10 @@ export class World {
   public removeEntity(entityId: number): void {
     this.hasEntity(entityId, true);
     const mask = getEntityMask(entityId, this.masks);
-    mask.remove(RESERVED_TAGS.ALIVE_INDEX);
+    mask.remove(TAG_ALIVE_INDEX);
     this.queryManager.removeEntity(entityId);
     const components = this.getEntityComponents(entityId);
-    const name = components[RESERVED_TAGS.NAME_INDEX] as string;
+    const name = components[TAG_NAME_INDEX] as string;
     this.names.delete(name);
     this.components[entityId] = [];
     mask.clear();
@@ -383,6 +351,7 @@ export class World {
   }
 
   /**
+   * Is entity index exist check
    *
    * @param entityId - entity id
    * @param throwError - throw error if does not exist
@@ -416,8 +385,8 @@ export class World {
       throw new Error(`Component is non class instance`);
     }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    const ctor = Object.getPrototypeOf(component).constructor as Constructor<unknown>;
-    const componentIndex = this.getComponentIndex(ctor);
+    const ctor = Object.getPrototypeOf(component).constructor as Constructor<T>;
+    const componentIndex = this.getRegisteredComponentIndex(ctor);
     const mask = getEntityMask(entityId, this.masks);
     if (mask.has(componentIndex)) {
       if (!forceAdd) {
@@ -440,7 +409,7 @@ export class World {
    */
   public removeComponent<T>(entityId: number, ctor: Constructor<T>): void {
     this.hasEntity(entityId, true);
-    const componentIndex = this.getComponentIndex(ctor);
+    const componentIndex = this.getRegisteredComponentIndex(ctor);
     const mask = getEntityMask(entityId, this.masks);
     if (mask.has(componentIndex)) {
       this.removeFromMask(entityId, componentIndex);
@@ -457,7 +426,7 @@ export class World {
    */
   public hasComponent<T>(entityId: number, ctor: Constructor<T>): boolean {
     this.hasEntity(entityId, true);
-    const componentIndex = this.getComponentIndex(ctor);
+    const componentIndex = this.getRegisteredComponentIndex(ctor);
     const mask = getEntityMask(entityId, this.masks);
     return mask.has(componentIndex);
   }
@@ -472,7 +441,7 @@ export class World {
    */
   public getComponent<T>(entityId: number, ctor: Constructor<T>): T {
     this.hasEntity(entityId, true);
-    const componentIndex = this.getComponentIndex(ctor);
+    const componentIndex = this.getRegisteredComponentIndex(ctor);
     const components = this.getEntityComponents(entityId);
     return components[componentIndex] as T;
   }
@@ -501,9 +470,10 @@ export class World {
    *
    * @param system - system class instance
    * @param groupName - [optional] group name
+   * @returns system instance
    */
-  public addSystem(system: System, groupName?: string): void {
-    this.systemsManager.addSystem(system, groupName);
+  public addSystem<T extends System>(system: T, groupName?: string): T {
+    return this.systemsManager.addSystem(system, groupName);
   }
 
   /**

@@ -51,16 +51,14 @@ describe('World tests', () => {
     world.registerComponent(TestComponent0);
     world.registerComponent(TestComponent1);
     expect(world.registeredComponents.size).toBe(RESERVED_INDICES + 2);
-    expect(world.getComponentIndex(TestComponent0)).toEqual(RESERVED_INDICES + 0);
-    expect(world.getComponentIndex(TestComponent1)).toEqual(RESERVED_INDICES + 1);
+    expect(world['getRegisteredComponentIndex'](TestComponent0)).toEqual(RESERVED_INDICES + 0);
+    expect(world['getRegisteredComponentIndex'](TestComponent1)).toEqual(RESERVED_INDICES + 1);
   });
 
   it('Should throw error for non-registered component', () => {
     const world = new World(ENTITIES_COUNT);
 
-    expect(() => world.getComponentIndex(TestComponent0)).toThrow(
-      `Component ${TestComponent0.name} is not registered`,
-    );
+    expect(() => world['getRegisteredComponentIndex'](TestComponent0)).toThrow();
   });
 
   it('Should throw error for already registered component', () => {

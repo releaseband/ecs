@@ -61,7 +61,7 @@ describe('Tags tests', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerTags(TAGS);
     const tag = 'NotRegisteredTag';
-    expect(() => world.createQuery(['tag0', tag])).toThrow(`Tag ${tag} is not registered`);
+    expect(() => world.createQuery(['tag0', tag])).toThrow();
   });
 
   it('Add,remove, tag must throw error if tag not registered', () => {
@@ -69,9 +69,9 @@ describe('Tags tests', () => {
     world.registerTags(TAGS);
     const tag = 'NotRegisteredTag';
     const entity = world.createEntity();
-    expect(() => world.addTag(entity, tag)).toThrow(`Tag ${tag} is not registered`);
-    expect(() => world.removeTag(entity, tag)).toThrow(`Tag ${tag} is not registered`);
-    expect(() => world.hasTag(entity, tag)).toThrow(`Tag ${tag} is not registered`);
+    expect(() => world.addTag(entity, tag)).toThrow();
+    expect(() => world.removeTag(entity, tag)).toThrow();
+    expect(() => world.hasTag(entity, tag)).toThrow();
   });
 
   it('Should throw error for already registered tag', () => {

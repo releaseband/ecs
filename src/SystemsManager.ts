@@ -63,15 +63,17 @@ export default class SystemsManager {
    *
    * @param system - system class instance
    * @param groupName - [optional] group name
+   * @returns system
    * @throws Will throw an error if group not found
    */
-  public addSystem(system: System, groupName?: string): void {
+  public addSystem<T extends System>(system: T, groupName?: string): T {
     if (groupName) {
       const group = this.getGroup(groupName);
       group.systems.push(system);
     } else {
       this.systems.push(system);
     }
+    return system;
   }
 
   /**

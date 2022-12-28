@@ -10,8 +10,7 @@ describe('System tests', () => {
   it('Add system', () => {
     const world = new World(ENTITIES_COUNT);
 
-    const system = new TestSystem0();
-    world.addSystem(system);
+    const system = world.addSystem(new TestSystem0());
 
     expect(world.systemsManager['systems']).toBeDefined();
     expect(world.systemsManager['systems']).toHaveLength(1);
@@ -20,11 +19,8 @@ describe('System tests', () => {
 
   it('Add multiple systems', () => {
     const world = new World(ENTITIES_COUNT);
-
-    const system0 = new TestSystem0();
-    const system1 = new TestSystem1();
-    world.addSystem(system0);
-    world.addSystem(system1);
+    const system0 = world.addSystem(new TestSystem0());
+    const system1 = world.addSystem(new TestSystem1());
 
     expect(world.systemsManager['systems']).toHaveLength(2);
     expect(world.systemsManager['systems']).toContain(system0);
@@ -33,10 +29,8 @@ describe('System tests', () => {
 
   it('Iterate through systems and call Update method', () => {
     const world = new World(ENTITIES_COUNT);
-    const system0 = new TestSystem0();
-    const system1 = new TestSystem1();
-    world.addSystem(system0);
-    world.addSystem(system1);
+    const system0 = world.addSystem(new TestSystem0());
+    const system1 = world.addSystem(new TestSystem1());
 
     world.update(1);
 
@@ -46,10 +40,8 @@ describe('System tests', () => {
 
   it('Remove system instance from world', () => {
     const world = new World(ENTITIES_COUNT);
-    const system0 = new TestSystem0();
-    const system1 = new TestSystem1();
-    world.addSystem(system0);
-    world.addSystem(system1);
+    const system0 = world.addSystem(new TestSystem0());
+    const system1 = world.addSystem(new TestSystem1());
 
     world.update(1);
 
@@ -68,16 +60,16 @@ describe('System tests', () => {
 
   it('Update can be optional', () => {
     const world = new World(ENTITIES_COUNT);
-    const system = new TestSystem2();
-    world.addSystem(system);
+    const system = world.addSystem(new TestSystem2());
+
     world.update(1);
     expect(system.testValue).toBeNull();
   });
 
   it('Should call Exit method if system removed', () => {
     const world = new World(ENTITIES_COUNT);
-    const system = new TestSystem2();
-    world.addSystem(system);
+    const system = world.addSystem(new TestSystem2());
+
     expect(system.testValue).toBeNull();
     world.removeSystem(TestSystem2);
     expect(system.testValue).toBe(12345);

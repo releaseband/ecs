@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/dot-notation */
 import { NOT, Query, World } from '../src';
 import {
   TestComponent0,
@@ -17,7 +18,7 @@ describe('Query tests', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
     const query = world.createQuery([TestComponent0]);
-    const componentIndex = world.getComponentIndex(TestComponent0);
+    const componentIndex = world['getRegisteredComponentIndex'](TestComponent0);
     expect(query).toBeDefined();
     expect(world.queryManager.registry).toHaveLength(1);
     expect(world.queryManager.registry[0]?.queries.has(query)).toBeTruthy();
@@ -60,7 +61,7 @@ describe('Query tests', () => {
 
       expect(query.queryMask).toBeDefined();
       ctors.forEach((ctor) => {
-        const componentIndex = world.getComponentIndex(ctor);
+        const componentIndex = world['getRegisteredComponentIndex'](ctor);
         expect(query.queryMask.mask.has(componentIndex)).toBe(true);
       });
       queries.push(query);
@@ -94,9 +95,15 @@ describe('Query tests', () => {
     world.registerComponent(TestComponent2);
 
     const query = world.createQuery([TestComponent0, TestComponent1, TestComponent2]);
-    expect(query.queryMask.mask.has(world.getComponentIndex(TestComponent0))).toBe(true);
-    expect(query.queryMask.mask.has(world.getComponentIndex(TestComponent1))).toBe(true);
-    expect(query.queryMask.mask.has(world.getComponentIndex(TestComponent2))).toBe(true);
+    expect(query.queryMask.mask.has(world['getRegisteredComponentIndex'](TestComponent0))).toBe(
+      true,
+    );
+    expect(query.queryMask.mask.has(world['getRegisteredComponentIndex'](TestComponent1))).toBe(
+      true,
+    );
+    expect(query.queryMask.mask.has(world['getRegisteredComponentIndex'](TestComponent2))).toBe(
+      true,
+    );
 
     const entity = world.createEntity();
     world.addComponent(entity, new TestComponent0());
@@ -627,10 +634,10 @@ describe('Query tests', () => {
         NOT(TestComponent1),
       ]);
 
-      const testComponent0 = world.getComponentIndex(TestComponent0);
-      const testComponent1 = world.getComponentIndex(TestComponent1);
-      const testTag0 = world.getTagIndex(TEST_TAG0);
-      const testTag1 = world.getTagIndex(TEST_TAG1);
+      const testComponent0 = world['getRegisteredComponentIndex'](TestComponent0);
+      const testComponent1 = world['getRegisteredComponentIndex'](TestComponent1);
+      const testTag0 = world['getRegisteredComponentIndex'](TEST_TAG0);
+      const testTag1 = world['getRegisteredComponentIndex'](TEST_TAG1);
       expect(query.queryMask.mask.has(testComponent0)).toBeTruthy();
       expect(query.queryMask.mask.has(testComponent1)).toBeFalsy();
       expect(query.queryMask.mask.has(testTag0)).toBeTruthy();
