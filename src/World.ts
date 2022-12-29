@@ -324,9 +324,7 @@ export class World {
    * @throws error if parent entity not exist
    */
   public createChildEntity(parentEntityId: number): number {
-    if (!this.hasEntity(parentEntityId)) {
-      throw new Error(`Entity ${parentEntityId} not exist`);
-    }
+    this.hasEntity(parentEntityId, true);
     const entityId = this.createEntity();
     const parentComponents = this.getEntityComponents(parentEntityId);
     const children = parentComponents[TAG_CHILDREN_INDEX] as Set<number>;
@@ -371,8 +369,19 @@ export class World {
   public removeEntity(entityId: number): void {
     this.hasEntity(entityId, true);
     const components = this.getEntityComponents(entityId);
+    // if has parent,update children set
+    const parentEntity = this.getParent(entityId);
+    if (parentEntity !== null) {
+      const parentComponents = this.getEntityComponents(parentEntity);
+      const children = parentComponents[TAG_CHILDREN_INDEX] as Set<number>;
+      children.delete(entityId);
+    }
+    // if has children, set parent = null for every child
     const children = components[TAG_CHILDREN_INDEX] as Set<number>;
-    this.removeEntities(children);
+    children.forEach((child) => {
+      const childComponents = this.getEntityComponents(child);
+      childComponents[TAG_PARENT_INDEX] = null;
+    });
     const mask = getEntityMask(entityId, this.masks);
     mask.remove(TAG_ALIVE_INDEX);
     this.queryManager.removeEntity(entityId);
@@ -395,8 +404,10 @@ export class World {
    *
    * @param entityId - entity id
    * @returns parent id or null
+   * @throws error if entity not exist
    */
   getParent(entityId: number): number | null {
+    this.hasEntity(entityId, true);
     const components = this.getEntityComponents(entityId);
     return components[TAG_PARENT_INDEX] as number | null;
   }
@@ -406,8 +417,10 @@ export class World {
    *
    * @param entityId - entity id
    * @returns set of children
+   * @throws error if entity not exist
    */
   getChildren(entityId: number): Set<number> {
+    this.hasEntity(entityId, true);
     const components = this.getEntityComponents(entityId);
     return components[TAG_CHILDREN_INDEX] as Set<number>;
   }

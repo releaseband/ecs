@@ -1,11 +1,10 @@
 /* eslint-disable @typescript-eslint/dot-notation */
 import { TAG_CHILDREN_INDEX, TAG_PARENT_INDEX, World } from '../src/World';
-import { TestComponent0 } from './util/components';
 
 const ENTITIES_COUNT = 1_000_000;
 
 describe('Relation tests', () => {
-  it('Should add child to parent', () => {
+  it('Should add child to parent and vice versa', () => {
     const world = new World(ENTITIES_COUNT);
 
     const parent = world.createEntity();
@@ -24,12 +23,14 @@ describe('Relation tests', () => {
 
     const parentChildren = world.getChildren(parent);
     expect(parentChildren.size).toBe(1);
+    expect(parentChildren.has(child)).toBeTruthy();
+
     const childChildren = world.getChildren(child);
     expect(childChildren.size).toBe(0);
 
     world.removeEntity(parent);
 
-    expect(world.hasEntity(child)).toBeFalsy();
+    expect(world.getParent(child)).toBeNull();
   });
 
   it('Should add multiple child entities', () => {
@@ -41,32 +42,51 @@ describe('Relation tests', () => {
     const child1 = world.createChildEntity(parent);
     const child2 = world.createChildEntity(parent);
     const child3 = world.createChildEntity(parent);
+    const children = [child0, child1, child2, child3];
+
+    const parentChildren = world.getChildren(parent);
+    expect(parentChildren.size).toBe(children.length);
+    expect(parentChildren).toEqual(new Set(children));
 
     world.removeEntity(parent);
 
-    expect(world.hasEntity(child0)).toBeFalsy();
-    expect(world.hasEntity(child1)).toBeFalsy();
-    expect(world.hasEntity(child2)).toBeFalsy();
-    expect(world.hasEntity(child3)).toBeFalsy();
+    expect(world.getParent(child0)).toBeFalsy();
+    expect(world.getParent(child1)).toBeFalsy();
+    expect(world.getParent(child2)).toBeFalsy();
+    expect(world.getParent(child3)).toBeFalsy();
   });
 
-  it('Should run query callback', () => {
+  it('Should remove child from parent entity set', () => {
     const world = new World(ENTITIES_COUNT);
-    world.registerComponent(TestComponent0);
-
-    let isRemoved = false;
 
     const parent = world.createEntity();
-    const child = world.createChildEntity(parent);
-    world.addComponent(child, new TestComponent0());
 
-    world.createQuery([TestComponent0]).onRemoveSubscribe(() => {
-      isRemoved = true;
+    const child0 = world.createChildEntity(parent);
+    const child1 = world.createChildEntity(parent);
+    const child2 = world.createChildEntity(parent);
+    const child3 = world.createChildEntity(parent);
+    [child0, child1, child2, child3].forEach((child) => {
+      expect(world.getChildren(parent).has(child)).toBeTruthy();
+      world.removeEntity(child);
+      expect(world.getChildren(parent).has(child)).toBeFalsy();
     });
 
-    world.removeEntity(parent);
+    const parentChildren = world.getChildren(parent);
+    expect(parentChildren.size).toBe(0);
+  });
 
-    expect(world.hasEntity(child)).toBeFalsy();
-    expect(isRemoved).toBeTruthy();
+  it('Should throw error if parent entity not exist', () => {
+    const world = new World(ENTITIES_COUNT);
+    expect(() => world.createChildEntity(123)).toThrow();
+  });
+
+  it('Should throw error on get parent if child entity not exist', () => {
+    const world = new World(ENTITIES_COUNT);
+    expect(() => world.getParent(123)).toThrow();
+  });
+
+  it('Should throw error on get children if parent entity not exist', () => {
+    const world = new World(ENTITIES_COUNT);
+    expect(() => world.getChildren(123)).toThrow();
   });
 });
