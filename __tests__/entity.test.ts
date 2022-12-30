@@ -35,8 +35,6 @@ describe('Entities tests', () => {
     // clear bitset on remove
     expect(world.masks[entity]?.has(TAG_ALIVE_INDEX)).toBeFalsy();
     expect(world.masks[entity]?.has(TAG_NAME_INDEX)).toBeFalsy();
-    // empty components
-    expect(world.components[entity]).toHaveLength(0);
   });
 
   it('Create and remove named entity', () => {
@@ -59,7 +57,6 @@ describe('Entities tests', () => {
     expect(world.names.has(name)).toBeFalsy();
     expect(world.masks[entity]?.has(TAG_ALIVE_INDEX)).toBeFalsy();
     expect(world.masks[entity]?.has(TAG_NAME_INDEX)).toBeFalsy();
-    expect(world.components[entity]).toHaveLength(0);
     expect(world.getEntity(name)).toBeUndefined();
   });
 

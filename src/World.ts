@@ -11,12 +11,16 @@ import { Component, ComponentInstance, Components, Constructor, DebugData } from
 
 export const TAG_ALIVE = '_reserved_entity_alive_tag_';
 export const TAG_ALIVE_INDEX = 0;
+export type TagAlive = string;
 export const TAG_NAME = '_reserved_entity_name_tag_';
 export const TAG_NAME_INDEX = 1;
+export type TagName = string;
 export const TAG_PARENT = '_reserved_entity_parent_tag';
 export const TAG_PARENT_INDEX = 2;
+export type TagParent = number | null;
 export const TAG_CHILDREN = '_reserved_entity_children_tag';
 export const TAG_CHILDREN_INDEX = 3;
+export type TagChildren = Set<number>;
 
 export const RESERVED_MASK_INDICES = [
   TAG_ALIVE_INDEX,
@@ -26,6 +30,9 @@ export const RESERVED_MASK_INDICES = [
 ] as const;
 export const RESERVED_MASK_NAMES = [TAG_ALIVE, TAG_NAME, TAG_PARENT, TAG_CHILDREN] as const;
 
+type ReservedComponents = [TagAlive, TagName, TagParent, TagChildren];
+type ComponentsStorage = [...ReservedComponents, ...unknown[]];
+
 export class World {
   public nextId = 0;
 
@@ -33,7 +40,7 @@ export class World {
 
   public readonly entities: Array<number> = [];
 
-  public readonly components = Array<Array<unknown>>();
+  public readonly components: ComponentsStorage[] = [];
 
   public readonly masks: Array<FastBitSet> = [];
 
@@ -66,11 +73,10 @@ export class World {
    * @param entityId - entity id
    * @returns array of components
    */
-  private getEntityComponents(entityId: number): Array<unknown> {
-    let components = this.components[entityId];
+  private getEntityComponents(entityId: number): ComponentsStorage {
+    const components = this.components[entityId];
     if (!components) {
-      components = [];
-      this.components[entityId] = components;
+      throw new Error(`Error components not found`);
     }
     return components;
   }
@@ -306,11 +312,7 @@ export class World {
     const name = entityName || entityId.toString();
     this.lookupTable[entityId] = this.entities.length;
     this.masks[entityId] = new FastBitSet(RESERVED_MASK_INDICES);
-    const components = this.getEntityComponents(entityId);
-    components[TAG_ALIVE_INDEX] = TAG_ALIVE;
-    components[TAG_NAME_INDEX] = name;
-    components[TAG_PARENT_INDEX] = null;
-    components[TAG_CHILDREN_INDEX] = new Set();
+    this.components[entityId] = [TAG_ALIVE, name, null, new Set()];
     this.names.set(name, entityId);
     this.entities.push(entityId);
     return entityId;
@@ -327,7 +329,7 @@ export class World {
     this.hasEntity(parentEntityId, true);
     const entityId = this.createEntity();
     const parentComponents = this.getEntityComponents(parentEntityId);
-    const children = parentComponents[TAG_CHILDREN_INDEX] as Set<number>;
+    const children = parentComponents[TAG_CHILDREN_INDEX];
     children.add(entityId);
     const childComponents = this.getEntityComponents(entityId);
     childComponents[TAG_PARENT_INDEX] = parentEntityId;
@@ -373,11 +375,11 @@ export class World {
     const parentEntity = this.getParent(entityId);
     if (parentEntity !== null) {
       const parentComponents = this.getEntityComponents(parentEntity);
-      const children = parentComponents[TAG_CHILDREN_INDEX] as Set<number>;
+      const children = parentComponents[TAG_CHILDREN_INDEX];
       children.delete(entityId);
     }
     // if has children, set parent = null for every child
-    const children = components[TAG_CHILDREN_INDEX] as Set<number>;
+    const children = components[TAG_CHILDREN_INDEX];
     children.forEach((child) => {
       const childComponents = this.getEntityComponents(child);
       childComponents[TAG_PARENT_INDEX] = null;
@@ -385,9 +387,8 @@ export class World {
     const mask = getEntityMask(entityId, this.masks);
     mask.remove(TAG_ALIVE_INDEX);
     this.queryManager.removeEntity(entityId);
-    const name = components[TAG_NAME_INDEX] as string;
+    const name = components[TAG_NAME_INDEX];
     this.names.delete(name);
-    this.components[entityId] = [];
     mask.clear();
     const index = this.lookupTable[entityId] as number;
     const last = this.entities.pop();
@@ -406,10 +407,10 @@ export class World {
    * @returns parent id or null
    * @throws error if entity not exist
    */
-  getParent(entityId: number): number | null {
+  getParent(entityId: number): TagParent {
     this.hasEntity(entityId, true);
     const components = this.getEntityComponents(entityId);
-    return components[TAG_PARENT_INDEX] as number | null;
+    return components[TAG_PARENT_INDEX];
   }
 
   /**
@@ -422,7 +423,7 @@ export class World {
   getChildren(entityId: number): Set<number> {
     this.hasEntity(entityId, true);
     const components = this.getEntityComponents(entityId);
-    return components[TAG_CHILDREN_INDEX] as Set<number>;
+    return components[TAG_CHILDREN_INDEX];
   }
 
   /**
