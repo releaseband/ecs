@@ -9,9 +9,9 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc && vite build",
-    "test": "jest --verbose",
-    "test-coverage": "jest --verbose --coverage",
-    "test-ci": "jest --verbose --maxWorkers=2",
+    "test": "vitest run",
+    "test:watch": "vitest dev",
+    "test:coverage": "vitest run --coverage",
     "bench": "npm run build && node ./bench/bench.js",
     "format": "prettier --write .",
     "type-check": "tsc --noEmit",
@@ -38,11 +38,10 @@
     "@releaseband/prettier-config": "^1.0.5",
     "@releaseband/typescript-config": "^0.2.9",
     "@swc/core": "^1.2.179",
-    "@swc/jest": "^0.2.21",
     "@types/fastbitset": "0.2.0",
-    "@types/jest": "^27.5.0",
     "@typescript-eslint/eslint-plugin": "^5.22.0",
     "@typescript-eslint/parser": "^5.22.0",
+    "@vitest/coverage-c8": "^0.27.0",
     "commitizen": "^4.2.4",
     "eslint": "^8.15.0",
     "eslint-plugin-import": "^2.26.0",
@@ -55,13 +54,13 @@
     "husky": "^8.0.0",
     "inquirer": "^8.2.4",
     "is-ci": "^3.0.1",
-    "jest": "^28.1.0",
     "lint-staged": "^12.4.1",
     "markdownlint-cli": "^0.31.1",
     "prettier": "^2.6.2",
     "typescript": "^4.8.2",
     "vite": "^2.9.8",
-    "vite-plugin-dts": "^1.1.1"
+    "vite-plugin-dts": "^1.1.1",
+    "vitest": "^0.26.3"
   },
   "volta": {
     "node": "16.14.0"

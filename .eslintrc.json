@@ -5,12 +5,15 @@
   },
   "overrides": [
     {
-      "files": "**/__tests__/**/*.test.ts",
+      "files": "**/__tests__/**/*.spec.ts",
       "extends": [
         "plugin:jest/recommended",
         "plugin:jest/style",
         "plugin:jest-formatting/recommended"
-      ]
+      ],
+      "rules": {
+        "jest/no-deprecated-functions": "off"
+      }
     }
   ]
 }
