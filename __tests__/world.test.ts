@@ -63,10 +63,12 @@ describe('World tests', () => {
     );
   });
 
-  it('Should throw error for already registered component', () => {
+  it('Should skip registration if component already registered', () => {
     const world = new World(ENTITIES_COUNT);
     world.registerComponent(TestComponent0);
-    expect(() => world.registerComponent(TestComponent0)).toThrow();
+    const components = world.registeredComponents.size;
+    world.registerComponent(TestComponent0);
+    expect(components).toEqual(world.registeredComponents.size);
   });
 
   it('Should remove Array|Set of entities', () => {
