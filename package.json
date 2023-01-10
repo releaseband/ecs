@@ -70,6 +70,7 @@
     "node": ">=16.0.0",
     "pnpm": ">=7.0.0"
   },
+  "packageManager": "pnpm@7.17.0",
   "files": [
     "dist"
   ],
