@@ -226,14 +226,19 @@ describe('Entities tests', () => {
     world.registerComponent(TestComponent0);
     const entity = world.createEntity();
 
-    const shouldBeUndefined = world.getComponent(entity, TestComponent0);
-    expect(shouldBeUndefined).toBeUndefined();
     world.addComponent(entity, new TestComponent0());
     const shouldBeDefined = world.getComponent(entity, TestComponent0);
     expect(shouldBeDefined).toBeDefined();
-    world.removeComponent(entity, TestComponent0);
-    const shouldBeUndefinedAgain = world.getComponent(entity, TestComponent0);
-    expect(shouldBeUndefinedAgain).toBeUndefined();
+  });
+
+  it('Should throw error if component does not exist', () => {
+    const world = new World(ENTITIES_COUNT);
+    world.registerComponent(TestComponent0);
+    const entity = world.createEntity();
+
+    expect(() => world.getComponent(entity, TestComponent0)).toThrow();
+    world.addComponent(entity, new TestComponent0());
+    expect(() => world.getComponent(entity, TestComponent0)).not.toThrow();
   });
 
   it('Check for entity component exist or not', () => {
