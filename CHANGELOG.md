@@ -1,5 +1,11 @@
 ## 0.2.4
 
+## 1.0.0
+
+### Major Changes
+
+- 5c6f6cc: release major version
+
 ## 0.2.8
 
 ### Patch Changes
