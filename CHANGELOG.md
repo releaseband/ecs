@@ -1,5 +1,11 @@
 ## 0.2.4
 
+## 0.2.8
+
+### Patch Changes
+
+- c425af4: ci action and ts version update
+
 ## 0.2.7
 
 ### Patch Changes
