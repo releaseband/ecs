@@ -1,5 +1,11 @@
 ## 0.2.4
 
+## 2.0.0
+
+### Major Changes
+
+- 162634c: get component behavior changed
+
 ## 1.0.0
 
 ### Major Changes
