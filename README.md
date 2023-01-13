@@ -3,5 +3,5 @@
 ## Installing
 
 ```bash
-npm i -D @releaseband/ecs
+pnpm add -D @releaseband/ecs
 ```
