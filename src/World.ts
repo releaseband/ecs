@@ -469,12 +469,17 @@ export class World {
    * @param ctor - component class constructor
    * @returns component class instance
    * @throws will throw an error if entity does not exist
+   * @throws will throw an error if component does not exist
    */
   public getComponent<T>(entityId: number, ctor: Constructor<T>): T {
     this.hasEntity(entityId, true);
     const componentIndex = this.getComponentIndex(ctor);
     const components = this.getEntityComponents(entityId);
-    return components[componentIndex] as T;
+    const component = components[componentIndex];
+    if (!component) {
+      throw new Error(`Component ${ctor.name} does not exist`);
+    }
+    return component as T;
   }
 
   /**
