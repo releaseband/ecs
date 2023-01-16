@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/dot-notation */
+import { describe, expect, it } from 'vitest';
+
 import { World } from '../src/World';
 import { TestSystem0, TestSystem1, TestSystem2 } from './util/systems';
 
