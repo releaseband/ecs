@@ -189,6 +189,15 @@ export class World {
   }
 
   /**
+   * Register multiple components
+   *
+   * @param constructors - components constructors
+   */
+  public registerComponents<T>(constructors: ReadonlyArray<Constructor<T>>): void {
+    constructors.forEach((ctor) => this.registerComponent(ctor));
+  }
+
+  /**
    * Register tags
    *
    * @param tags - array of tags
@@ -475,7 +484,7 @@ export class World {
     const components = this.getEntityComponents(entityId);
     const component = components[componentIndex];
     if (!component) {
-      throw new Error(`Component ${ctor.name} does not exist`);
+      throw new Error(`Entity ${entityId} does not contain ${ctor.name}`);
     }
     return component as T;
   }

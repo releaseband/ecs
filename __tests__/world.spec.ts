@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { RESERVED_MASK_INDICES, World } from '../src/World';
-import { TestComponent0, TestComponent1 } from './util/components';
+import { TestComponent0, TestComponent1, TestComponent2, TestComponent3 } from './util/components';
 import { createEntities } from './util/helpers';
 import {
   TestSystem0,
@@ -55,6 +55,14 @@ describe('World tests', () => {
     expect(world.registeredComponents.size).toBe(RESERVED_INDICES + 2);
     expect(world.getComponentIndex(TestComponent0)).toEqual(RESERVED_INDICES + 0);
     expect(world.getComponentIndex(TestComponent1)).toEqual(RESERVED_INDICES + 1);
+  });
+
+  it('Should register multiple components', () => {
+    const world = new World(ENTITIES_COUNT);
+    const RESERVED_INDICES = RESERVED_MASK_INDICES.length;
+    const ctors = [TestComponent0, TestComponent1, TestComponent2, TestComponent3];
+    world.registerComponents(ctors);
+    expect(world.registeredComponents.size).toBe(RESERVED_INDICES + ctors.length);
   });
 
   it('Should throw error for non-registered component', () => {
