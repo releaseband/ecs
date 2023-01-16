@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/dot-notation */
+import { describe, expect, it } from 'vitest';
+
 import { RESERVED_MASK_INDICES, World } from '../src/World';
 import { TestComponent0, TestComponent1 } from './util/components';
 import { createEntities } from './util/helpers';

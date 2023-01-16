@@ -1,3 +1,5 @@
+import { describe, expect, it } from 'vitest';
+
 import { RESERVED_MASK_INDICES, World } from '../src/World';
 import { TestComponent0 } from './util/components';
 import { TAGS, TEST_TAG0, TEST_TAG1, TEST_TAG2 } from './util/tags';

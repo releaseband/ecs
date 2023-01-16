@@ -1,4 +1,5 @@
 import FastBitSet from 'fastbitset';
+import { describe, expect, it } from 'vitest';
 
 import { getEntityMask } from '../src/Helpers';
 

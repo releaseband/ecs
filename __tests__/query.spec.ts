@@ -1,3 +1,5 @@
+import { describe, expect, it } from 'vitest';
+
 import { NOT, Query, World } from '../src';
 import {
   TestComponent0,
