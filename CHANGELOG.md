@@ -1,5 +1,11 @@
 ## 0.2.4
 
+## 2.1.2
+
+### Patch Changes
+
+- ac2b53d: registercomponents types fix
+
 ## 2.1.1
 
 ### Patch Changes
