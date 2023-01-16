@@ -193,7 +193,7 @@ export class World {
    *
    * @param constructors - components constructors
    */
-  public registerComponents<T>(constructors: ReadonlyArray<Constructor<T>>): void {
+  public registerComponents(constructors: ReadonlyArray<Constructor<unknown>>): void {
     constructors.forEach((ctor) => this.registerComponent(ctor));
   }
 
