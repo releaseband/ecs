@@ -1,5 +1,11 @@
 ## 0.2.4
 
+## 2.1.0
+
+### Minor Changes
+
+- 0173944: re-registration of component does not throw an error
+
 ## 2.0.1
 
 ### Patch Changes
