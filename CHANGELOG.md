@@ -1,5 +1,11 @@
 ## 0.2.4
 
+## 2.0.1
+
+### Patch Changes
+
+- 979d966: move from jest to vitest
+
 ## 2.0.0
 
 ### Major Changes
