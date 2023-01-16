@@ -1,5 +1,11 @@
 ## 0.2.4
 
+## 2.1.1
+
+### Patch Changes
+
+- add5ced: multiple components register,improves
+
 ## 2.1.0
 
 ### Minor Changes
