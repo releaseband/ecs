@@ -179,15 +179,13 @@ export class World {
    * Register component class
    *
    * @param component - component constructor
-   * @throws error if component already added
    */
   public registerComponent<T>(ctor: Constructor<T>): void {
-    if (this.registeredComponents.has(ctor.name)) {
-      throw Error(`Component ${ctor.name} already registered`);
+    if (!this.registeredComponents.has(ctor.name)) {
+      // eslint-disable-next-line no-param-reassign
+      ctor.cachedComponentId = ctor.name;
+      this.registeredComponents.set(ctor.name, this.registeredComponents.size);
     }
-    // eslint-disable-next-line no-param-reassign
-    ctor.cachedComponentId = ctor.name;
-    this.registeredComponents.set(ctor.name, this.registeredComponents.size);
   }
 
   /**
