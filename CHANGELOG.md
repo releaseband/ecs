@@ -1,5 +1,11 @@
 ## 0.2.4
 
+## 2.1.3
+
+### Patch Changes
+
+- 9ec6ff7: vitest update
+
 ## 2.1.2
 
 ### Patch Changes
