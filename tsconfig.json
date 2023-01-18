@@ -1,4 +1,4 @@
 {
   "extends": "@releaseband/typescript-config",
-  "include": ["src/**/*", "__tests__/**/*", "jest.config.ts", "vitest.config.ts", "vite.config.ts"]
+  "include": ["src/**/*", "__tests__/**/*", "vite.config.ts"]
 }
