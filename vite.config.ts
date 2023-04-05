@@ -10,4 +10,8 @@ export default defineConfig({
     },
   },
   plugins: [dts()],
+  test: {
+    include: ['**/__tests__/*.spec.ts'],
+    exclude: ['**/dist/**'],
+  },
 });
