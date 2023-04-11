@@ -1,5 +1,4 @@
-import { ComponentInstance, Constructor } from '../../src/types';
-import { World } from '../../src/World';
+import { ComponentInstance, Constructor, World } from '../../src';
 
 export const createEntities = <T>(
   world: World,

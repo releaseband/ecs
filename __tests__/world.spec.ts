@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/dot-notation */
 import { describe, expect, it } from 'vitest';
 
+import { DEFAULT_GROUP_NAME } from '../src';
 import { RESERVED_MASK_INDICES, World } from '../src/World';
 import { TestComponent0, TestComponent1, TestComponent2, TestComponent3 } from './util/components';
 import { createEntities } from './util/helpers';
@@ -186,15 +187,17 @@ describe('World tests', () => {
     world.registerComponent(TestComponent0);
     world.registerComponent(TestComponent1);
     const ctors = [TestComponent0, TestComponent1];
+    const TEST_GROUP = 'test_group';
+    world.createGroups([{ name: TEST_GROUP }]);
+
     world.addSystem(new TestSystem0());
-    world.addSystem(new TestSystem2());
+    world.addSystem(new TestSystem2(), TEST_GROUP);
 
     createEntities(world, ctors, TEST_ENTITIES_AMOUNT);
     world.createQuery([TestComponent0, TestComponent1]);
 
     world.destroy();
-    expect(world.systemsManager['systems']).toHaveLength(0);
-    expect(world.systemsManager['groups'].size).toBe(0);
+    world.systemsManager['groups'].forEach((group) => expect(group.systems).toHaveLength(0));
     expect(world.entities).toHaveLength(0);
     expect(world.queryManager.registry).toHaveLength(0);
     expect(world.queryManager).toBeDefined();
@@ -212,8 +215,7 @@ describe('World tests', () => {
     expect(world.entities).toHaveLength(TEST_ENTITIES_AMOUNT + 1);
 
     world.destroy();
-    expect(world.systemsManager['systems']).toHaveLength(0);
-    expect(world.systemsManager['groups'].size).toBe(0);
+    world.systemsManager['groups'].forEach((group) => expect(group.systems).toHaveLength(0));
     expect(world.entities).toHaveLength(0);
     expect(world.queryManager).toBeDefined();
   });
@@ -283,9 +285,12 @@ describe('World tests', () => {
 
     it('Detailed list should contain only systems with update method', () => {
       world.update(1);
-      expect(debug.updateTimeDetailed.has(TestSystem0.name)).toBeTruthy();
-      expect(debug.updateTimeDetailed.has(TestSystem1.name)).toBeTruthy();
-      expect(debug.updateTimeDetailed.has(TestSystem2.name)).toBeFalsy();
+      const system0Key = `${DEFAULT_GROUP_NAME}_${TestSystem0.name}`;
+      const system1Key = `${DEFAULT_GROUP_NAME}_${TestSystem1.name}`;
+      const system2Key = `${DEFAULT_GROUP_NAME}_${TestSystem2.name}`;
+      expect(debug.updateTimeDetailed.has(system0Key)).toBeTruthy();
+      expect(debug.updateTimeDetailed.has(system1Key)).toBeTruthy();
+      expect(debug.updateTimeDetailed.has(system2Key)).toBeFalsy();
     });
 
     it('Should switch to normal mode', () => {

@@ -1,4 +1,4 @@
-import { System } from '../../../src/System';
+import { System } from '../../../src';
 
 export default class TestSystem1 implements System {
   testValue: number | null = null;

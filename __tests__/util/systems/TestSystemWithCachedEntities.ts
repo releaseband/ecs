@@ -1,5 +1,4 @@
-import { System } from '../../../src/System';
-import { World } from '../../../src/World';
+import { System, World } from '../../../src';
 
 export default class TestSystemWithCachedEntities implements System {
   public entity;

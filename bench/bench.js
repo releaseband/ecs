@@ -2,6 +2,8 @@ import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { Worker } from 'worker_threads';
 
+//TODO: move benchmarks to vitest bench
+
 const BENCHMARKS = {
   packed_1: 5_000,
   packed_5: 1_000,
