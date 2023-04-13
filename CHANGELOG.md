@@ -1,5 +1,11 @@
 ## 0.2.4
 
+## 2.2.0
+
+### Minor Changes
+
+- 0e0de63: groups support
+
 ## 2.1.3
 
 ### Patch Changes
