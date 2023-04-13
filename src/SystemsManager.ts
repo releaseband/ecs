@@ -1,21 +1,8 @@
-import { System } from './System';
-import { Constructor } from './types';
+import { Constructor, DEFAULT_GROUP_NAME, Group, System } from './types';
 
-export type Group = {
-  disabled: boolean;
-  systems: Array<System>;
-};
-
-const remove = (system: System, name?: string): boolean => {
-  const isExist = !name || system.constructor.name === name;
-  if (isExist && system.exit) {
-    system.exit();
-  }
-  return !isExist;
-};
-
-const update = (systems: Array<System>, dt: number): void => {
-  systems.forEach((system) => {
+const update = (group: Group, dt: number): void => {
+  if (group.disabled) return;
+  group.systems.forEach((system) => {
     if (system.update) {
       system.update(dt);
     }
@@ -25,7 +12,9 @@ const update = (systems: Array<System>, dt: number): void => {
 export default class SystemsManager {
   private readonly groups = new Map<string, Group>();
 
-  private systems: Array<System> = [];
+  constructor() {
+    this.createGroup(DEFAULT_GROUP_NAME);
+  }
 
   /**
    * Get systems group if exist
@@ -48,12 +37,12 @@ export default class SystemsManager {
    * @param groupName - group name
    * @throws Will throw an error if group already exist
    */
-  public createGroup(groupName: string): void {
+  public createGroup(groupName: string, disabled = false): void {
     if (this.groups.has(groupName)) {
       throw new Error(`Group ${groupName} already exist`);
     }
     this.groups.set(groupName, {
-      disabled: false,
+      disabled,
       systems: [],
     });
   }
@@ -65,27 +54,27 @@ export default class SystemsManager {
    * @param groupName - [optional] group name
    * @throws Will throw an error if group not found
    */
-  public addSystem(system: System, groupName?: string): void {
-    if (groupName) {
-      const group = this.getGroup(groupName);
-      group.systems.push(system);
-    } else {
-      this.systems.push(system);
-    }
+  public addSystem(system: System, groupName = DEFAULT_GROUP_NAME): void {
+    const group = this.getGroup(groupName);
+    group.systems.push(system);
   }
 
   /**
    * Remove system from group and call system.exit method
    *
    * @param ctor - system class constructor
+   * @param groupName - group name [optional]
    */
   public removeSystem(ctor: Constructor<System>, groupName?: string): void {
-    if (groupName) {
-      const group = this.getGroup(groupName);
-      group.systems = group.systems.filter((system) => remove(system, ctor.name));
-    } else {
-      this.systems = this.systems.filter((system) => remove(system, ctor.name));
-    }
+    this.groups.forEach((group, name) => {
+      if (groupName && groupName !== name) return;
+      // eslint-disable-next-line no-param-reassign
+      group.systems = group.systems.filter((system) => {
+        const isExist = system.constructor.name === ctor.name;
+        if (isExist && system.exit) system.exit();
+        return !isExist;
+      });
+    });
   }
 
   /**
@@ -97,11 +86,23 @@ export default class SystemsManager {
   public removeGroup(groupName: string): void {
     const group = this.getGroup(groupName);
     group.systems.forEach((system) => {
-      if (system.exit) {
-        system.exit();
-      }
+      if (system.exit) system.exit();
     });
     group.systems.length = 0;
+  }
+
+  /**
+   * disable or enable single group
+   *
+   * @param groupName - group name
+   */
+  public setGroupStatus(groupName: string, isDisabled: boolean): void {
+    const group = this.getGroup(groupName);
+    group.disabled = isDisabled;
+    group.systems.forEach((system) => {
+      if (group.disabled && system.disable) system.disable();
+      if (!group.disabled && system.enable) system.enable();
+    });
   }
 
   /**
@@ -112,8 +113,7 @@ export default class SystemsManager {
    * @param dt - delta time
    */
   public normalUpdate(dt: number): void {
-    this.groups.forEach((group) => update(group.systems, dt));
-    update(this.systems, dt);
+    this.groups.forEach((group) => update(group, dt));
   }
 
   /**
@@ -126,20 +126,13 @@ export default class SystemsManager {
   public debugUpdate(dt: number, data: Map<string, number>): void {
     this.groups.forEach((group, groupName) =>
       group.systems.forEach((system) => {
-        if (system.update) {
-          const start = performance.now();
-          system.update(dt);
-          data.set(`${groupName}_${system.constructor.name}`, performance.now() - start);
-        }
-      }),
-    );
-    this.systems.forEach((system) => {
-      if (system.update) {
+        if (!system.update) return;
         const start = performance.now();
         system.update(dt);
-        data.set(system.constructor.name, performance.now() - start);
-      }
-    });
+        const end = performance.now() - start;
+        data.set(`${groupName}_${system.constructor.name}`, end);
+      }),
+    );
   }
 
   /**
@@ -148,7 +141,5 @@ export default class SystemsManager {
   public dispose(): void {
     this.groups.forEach((_group, groupName) => this.removeGroup(groupName));
     this.groups.clear();
-    this.systems.forEach((system) => remove(system));
-    this.systems.length = 0;
   }
 }

@@ -5,9 +5,8 @@ import { getEntityMask } from './Helpers';
 import { Query } from './Query';
 import QueryManager from './QueryManager';
 import QueryMask from './QueryMask';
-import { System } from './System';
 import SystemsManager from './SystemsManager';
-import { Component, ComponentInstance, Components, Constructor, DebugData } from './types';
+import { Component, ComponentInstance, Components, Constructor, DebugData, System } from './types';
 
 export const RESERVED_TAGS = {
   ALIVE: '_reserved_entity_alive_tag_',
@@ -492,11 +491,11 @@ export class World {
   /**
    * Create empty systems group(s)
    *
-   * @param groups - names
+   * @param groups - groups
    * @throws Will throw an error if group already exist
    */
-  public createGroups(groups: ReadonlyArray<string>): void {
-    groups.forEach((groupName) => this.systemsManager.createGroup(groupName));
+  public createGroups(groups: ReadonlyArray<{ name: string; disabled?: boolean }>): void {
+    groups.forEach((group) => this.systemsManager.createGroup(group.name, group.disabled));
   }
 
   /**
@@ -506,6 +505,24 @@ export class World {
    */
   public removeGroup(groupName: string): void {
     this.systemsManager.removeGroup(groupName);
+  }
+
+  /**
+   * disable systems group
+   *
+   * @param groupName - group name
+   */
+  public disableGroup(groupName: string): void {
+    this.systemsManager.setGroupStatus(groupName, true);
+  }
+
+  /**
+   * enable systems group
+   *
+   * @param groupName - group name
+   */
+  public enableGroup(groupName: string): void {
+    this.systemsManager.setGroupStatus(groupName, false);
   }
 
   /**
