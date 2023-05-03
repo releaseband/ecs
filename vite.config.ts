@@ -13,5 +13,8 @@ export default defineConfig({
   test: {
     include: ['**/__tests__/*.spec.ts'],
     exclude: ['**/dist/**'],
+    benchmark: {
+      include: ['**/__bench__/*.spec.ts'],
+    },
   },
 });
