@@ -12,7 +12,7 @@
     "test": "vitest run",
     "test:watch": "vitest dev",
     "test:coverage": "vitest run --coverage",
-    "bench": "npm run build && node ./bench/bench.js",
+    "bench": "vitest bench",
     "format": "prettier --write .",
     "type-check": "tsc --noEmit",
     "lint": "eslint --ext .js,.ts --fix .",
@@ -38,7 +38,7 @@
     "@releaseband/prettier-config": "^1.0.5",
     "@releaseband/typescript-config": "^1.0.0",
     "@types/fastbitset": "0.2.0",
-    "@vitest/coverage-c8": "^0.27.2",
+    "@vitest/coverage-c8": "^0.30.1",
     "@typescript-eslint/eslint-plugin": "^5.57.1",
     "@typescript-eslint/parser": "^5.57.1",
     "commitizen": "^4.2.4",
@@ -59,7 +59,7 @@
     "typescript": "^5.0.3",
     "vite": "^4.2.1",
     "vite-plugin-dts": "^1.1.1",
-    "vitest": "^0.30.0"
+    "vitest": "^0.30.1"
   },
   "volta": {
     "node": "16.14.0"
