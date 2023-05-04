@@ -1,5 +1,11 @@
 ## 0.2.4
 
+## 2.2.1
+
+### Patch Changes
+
+- f3342f7: removed old benchmarks stuff
+
 ## 2.2.0
 
 ### Minor Changes
