@@ -1,12 +1,21 @@
+// eslint-disable-next-line max-classes-per-file
 import FastBitSet from 'fastbitset';
 
 import EventsEmitter from './EventsEmitter';
-import { getEntityMask } from './Helpers';
+import { getEntityMask, isValidComponent } from './Helpers';
 import { Query } from './Query';
 import QueryManager from './QueryManager';
 import QueryMask from './QueryMask';
 import SystemsManager from './SystemsManager';
-import { Component, ComponentInstance, Components, Constructor, DebugData, System } from './types';
+import {
+  ClassInstance,
+  ComponentConstructor,
+  Components,
+  Constructor,
+  DebugData,
+  System,
+  Tag,
+} from './types';
 
 export const RESERVED_TAGS = {
   ALIVE: '_reserved_entity_alive_tag_',
@@ -137,23 +146,23 @@ export class World {
     this.removeFromMask(entityId, tagIndex);
   }
 
-  getIndex(component: Component): number {
-    return typeof component === 'string'
-      ? this.getTagIndex(component)
-      : this.getComponentIndex(component);
+  getIndex<T>(component: ComponentConstructor<T> | Tag): number {
+    if (typeof component === 'string') return this.getTagIndex(component);
+    return this.getComponentIndex(component);
   }
 
   /**
+   * Get registered component index
    *
-   * @param componentName - component constructor name
+   * @param component - component ctor
    * @returns registered component index
    * @throws Will throw an error if component not registered
    *
    */
-  getComponentIndex<T>(ctor: Constructor<T>): number {
-    const index = this.registeredComponents.get(ctor.cachedComponentId);
+  getComponentIndex<T>(component: ComponentConstructor<T>): number {
+    const index = this.registeredComponents.get(component.componentId);
     if (index === undefined) {
-      throw new Error(`Component ${ctor.name} is not registered`);
+      throw new Error(`Component ${component.componentId} is not registered`);
     }
     return index;
   }
@@ -177,23 +186,21 @@ export class World {
   /**
    * Register component class
    *
-   * @param component - component constructor
+   * @param component - component
    */
-  public registerComponent<T>(ctor: Constructor<T>): void {
-    if (!this.registeredComponents.has(ctor.name)) {
-      // eslint-disable-next-line no-param-reassign
-      ctor.cachedComponentId = ctor.name;
-      this.registeredComponents.set(ctor.name, this.registeredComponents.size);
+  public registerComponent<T>(component: ComponentConstructor<T>): void {
+    if (!this.registeredComponents.has(component.componentId)) {
+      this.registeredComponents.set(component.componentId, this.registeredComponents.size);
     }
   }
 
   /**
    * Register multiple components
    *
-   * @param constructors - components constructors
+   * @param components - components
    */
-  public registerComponents(constructors: ReadonlyArray<Constructor<unknown>>): void {
-    constructors.forEach((ctor) => this.registerComponent(ctor));
+  public registerComponents(components: ReadonlyArray<ComponentConstructor<unknown>>): void {
+    components.forEach((component) => this.registerComponent(component));
   }
 
   /**
@@ -201,7 +208,7 @@ export class World {
    *
    * @param tags - array of tags
    */
-  public registerTags(tags: ReadonlyArray<string>): void {
+  public registerTags(tags: ReadonlyArray<Tag>): void {
     let index = this.registeredComponents.size;
     tags.forEach((tag) => {
       if (this.registeredComponents.has(tag)) {
@@ -217,7 +224,7 @@ export class World {
    * @param tag - tag name
    * @returns is tag exist in the world
    */
-  public isTagExist(tag: string): boolean {
+  public isTagExist(tag: Tag): boolean {
     return this.registeredComponents.has(tag);
   }
 
@@ -242,7 +249,7 @@ export class World {
     const notIndices: Array<number> = [];
 
     components.forEach((component) => {
-      if (typeof component === 'object') {
+      if (typeof component === 'object' && 'component' in component) {
         notIndices.push(this.getIndex(component.component));
       } else {
         indices.push(this.getIndex(component));
@@ -406,28 +413,23 @@ export class World {
    * Add component object to entity and update queries
    *
    * @param entityId - entity id
-   * @param component - component class instance
+   * @param component - component instance
    * @param forceAdd - add a component even if it exists
    * @returns - component instance
    * @throws will throw an error if entity does not exist
    * @throws will throw error if component exist
    */
-  public addComponent<T>(
-    entityId: number,
-    component: ComponentInstance<T>,
-    forceAdd = false,
-  ): ComponentInstance<T> {
+  public addComponent<T>(entityId: number, component: ClassInstance<T>, forceAdd = false): T {
     this.hasEntity(entityId, true);
-    if (typeof component !== 'object' || !component) {
-      throw new Error(`Component is non class instance`);
+    const ctor = component.constructor;
+    if (!isValidComponent<T>(ctor)) {
+      throw new Error(`Non component class instance`);
     }
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    const ctor = Object.getPrototypeOf(component).constructor as Constructor<unknown>;
     const componentIndex = this.getComponentIndex(ctor);
     const mask = getEntityMask(entityId, this.masks);
     if (mask.has(componentIndex)) {
       if (!forceAdd) {
-        throw new Error(`Entity ${entityId} already has component ${ctor.name}`);
+        throw new Error(`Entity ${entityId} already has component ${ctor.componentId}`);
       }
       this.removeFromMask(entityId, componentIndex);
     }
@@ -441,12 +443,12 @@ export class World {
    * Remove component object from entity and update queries
    *
    * @param entityId - entity id
-   * @param ctor - component class constructor
+   * @param component - component
    * @throws will throw an error if entity does not exist
    */
-  public removeComponent<T>(entityId: number, ctor: Constructor<T>): void {
+  public removeComponent<T>(entityId: number, component: ComponentConstructor<T>): void {
     this.hasEntity(entityId, true);
-    const componentIndex = this.getComponentIndex(ctor);
+    const componentIndex = this.getComponentIndex(component);
     const mask = getEntityMask(entityId, this.masks);
     if (mask.has(componentIndex)) {
       this.removeFromMask(entityId, componentIndex);
@@ -461,7 +463,7 @@ export class World {
    * @returns true if component exist,or false if not
    * @throws will throw an error if entity does not exist
    */
-  public hasComponent<T>(entityId: number, ctor: Constructor<T>): boolean {
+  public hasComponent<T>(entityId: number, ctor: ComponentConstructor<T>): boolean {
     this.hasEntity(entityId, true);
     const componentIndex = this.getComponentIndex(ctor);
     const mask = getEntityMask(entityId, this.masks);
@@ -477,13 +479,13 @@ export class World {
    * @throws will throw an error if entity does not exist
    * @throws will throw an error if component does not exist
    */
-  public getComponent<T>(entityId: number, ctor: Constructor<T>): T {
+  public getComponent<T>(entityId: number, ctor: ComponentConstructor<T>): T {
     this.hasEntity(entityId, true);
-    const componentIndex = this.getComponentIndex(ctor);
+    const componentIndex = this.getIndex(ctor.componentId);
     const components = this.getEntityComponents(entityId);
     const component = components[componentIndex];
     if (!component) {
-      throw new Error(`Entity ${entityId} does not contain ${ctor.name}`);
+      throw new Error(`Entity ${entityId} does not contain ${ctor.componentId}`);
     }
     return component as T;
   }

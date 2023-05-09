@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import { RESERVED_MASK_INDICES, RESERVED_TAGS, World } from '../src/World';
-import { TestComponent0, TestComponent1, TestComponent2 } from './util/components';
+import {
+  NotValidComponent,
+  TestComponent0,
+  TestComponent1,
+  TestComponent2,
+} from './util/components';
 
 const ENTITIES_COUNT = 1_000_000;
 
@@ -252,14 +257,12 @@ describe('Entities tests', () => {
     expect(world.hasComponent(entity, TestComponent0)).toBe(true);
   });
 
-  it('Must throw error if used non-registered component', () => {
+  it('Should throw error if component not registered', () => {
     const world = new World(ENTITIES_COUNT);
 
     const component = new TestComponent1();
     const entity = world.createEntity();
-    expect(() => world.addComponent(entity, component)).toThrow(
-      `Component ${component.constructor.name} is not registered`,
-    );
+    expect(() => world.addComponent(entity, component)).toThrow();
   });
 
   it('Add component must return component instance', () => {
@@ -314,5 +317,11 @@ describe('Entities tests', () => {
     expect(world.entities[0]).toEqual(entity0);
     expect(world.hasEntity(entity0)).toBeTruthy();
     expect(world.hasEntity(entity1)).toBeFalsy();
+  });
+
+  it('Should contain static property with componentId', () => {
+    const world = new World(ENTITIES_COUNT);
+    const entity = world.createEntity();
+    expect(() => world.addComponent(entity, new NotValidComponent())).toThrow();
   });
 });

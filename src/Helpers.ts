@@ -1,10 +1,6 @@
 import FastBitSet from 'fastbitset';
 
-declare global {
-  interface Object {
-    cachedComponentId: string;
-  }
-}
+import { ComponentConstructor } from './types';
 
 /**
  * Get entity components mask
@@ -19,4 +15,8 @@ export const getEntityMask = (entityId: number, masks: Array<FastBitSet>): FastB
     throw new Error(`Entity ${entityId} mask not found`);
   }
   return mask;
+};
+
+export const isValidComponent = <T>(component: unknown): component is ComponentConstructor<T> => {
+  return !!component && typeof component === 'function' && 'componentId' in component;
 };

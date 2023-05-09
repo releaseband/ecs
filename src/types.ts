@@ -1,17 +1,27 @@
 export const DEFAULT_GROUP_NAME = 'default';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+export type ClassInstance<T> = T extends object & { call?: never } & {
+  constructor: { componentId?: string };
+}
+  ? T
+  : never;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Constructor<T> = new (...args: any[]) => T;
 
-export type ComponentInstance<T> = T extends object & { call?: never } ? T : never;
+export interface ComponentConstructor<T> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  new (...args: any[]): T;
+  readonly componentId: string;
+}
 
-export type Component = Constructor<unknown> | string;
+export type Tag = string;
 
-export type NotComponent = { component: Component };
+export type Not<T> = { component: ComponentConstructor<T> | Tag };
 
-export const NOT = (component: Component): NotComponent => ({ component });
+export const NOT = <T>(component: ComponentConstructor<T> | Tag): Not<T> => ({ component });
 
-export type Components = ReadonlyArray<Component | NotComponent>;
+export type Components = ReadonlyArray<ComponentConstructor<unknown> | Not<unknown> | Tag>;
 
 export type DebugData = {
   updateTime: number;

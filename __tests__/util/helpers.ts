@@ -1,8 +1,9 @@
-import { ComponentInstance, Constructor, World } from '../../src';
+import { Constructor, World } from '../../src';
 
-export const createEntities = <T>(
+export const createEntities = (
   world: World,
-  components: (Constructor<ComponentInstance<T>> | string)[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  components: (Constructor<any> | string)[],
   amount: number,
 ): Array<number> => {
   const entities = Array<number>();

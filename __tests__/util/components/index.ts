@@ -1,15 +1,7 @@
-import TestComponent0 from './TestComponent0';
-import TestComponent1 from './TestComponent1';
-import TestComponent2 from './TestComponent2';
-import TestComponent3 from './TestComponent3';
-import TestComponent4 from './TestComponent4';
-import TestComponent5 from './TestComponent5';
-
-export {
-  TestComponent0,
-  TestComponent1,
-  TestComponent2,
-  TestComponent3,
-  TestComponent4,
-  TestComponent5,
-};
+export { default as NotValidComponent } from './NotValidComponent';
+export { default as TestComponent0 } from './TestComponent0';
+export { default as TestComponent1 } from './TestComponent1';
+export { default as TestComponent2 } from './TestComponent2';
+export { default as TestComponent3 } from './TestComponent3';
+export { default as TestComponent4 } from './TestComponent4';
+export { default as TestComponent5 } from './TestComponent5';
