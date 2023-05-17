@@ -21,8 +21,8 @@ describe('Query tests', () => {
     const query = world.createQuery([TestComponent0]);
     const componentIndex = world.getComponentIndex(TestComponent0);
     expect(query).toBeDefined();
-    expect(world.queryManager.registry).toHaveLength(1);
-    expect(world.queryManager.registry[0]?.queries.has(query)).toBeTruthy();
+    expect(world.queryManager.registry.size).toBe(1);
+    expect(world.queryManager.registry.get(query.queryMask.key)?.queries.has(query)).toBeTruthy();
     expect(query.queryMask).toBeDefined();
     expect(query.queryMask.mask.has(componentIndex)).toBe(true);
     expect(query.entities).toBeDefined();
@@ -68,7 +68,7 @@ describe('Query tests', () => {
       queries.push(query);
     });
     expect(queries).toHaveLength(QUERIES.length);
-    expect(world.queryManager.registry).toHaveLength(QUERIES.length);
+    expect(world.queryManager.registry.size).toBe(QUERIES.length);
   });
 
   it('Is query updated', () => {
@@ -125,7 +125,7 @@ describe('Query tests', () => {
     world.registerComponent(TestComponent3);
     world.registerComponent(TestComponent4);
 
-    const query = world.createQuery([TestComponent0, TestComponent2]);
+    const query0 = world.createQuery([TestComponent0, TestComponent2]);
 
     const entity0 = world.createEntity();
     world.addComponent(entity0, new TestComponent0());
@@ -149,10 +149,23 @@ describe('Query tests', () => {
     world.addComponent(entity4, new TestComponent2());
     world.addComponent(entity4, new TestComponent0());
 
-    expect(query.entities.size).toBe(3);
-    expect(query.entities.has(entity1)).toBe(true);
-    expect(query.entities.has(entity2)).toBe(true);
-    expect(query.entities.has(entity4)).toBe(true);
+    expect(query0.entities.size).toBe(3);
+    expect(query0.entities.has(entity1)).toBe(true);
+    expect(query0.entities.has(entity2)).toBe(true);
+    expect(query0.entities.has(entity4)).toBe(true);
+    expect(world.queryManager.registry.size).toBe(1);
+
+    const query1 = world.createQuery([TestComponent0, TestComponent2]);
+    expect(world.queryManager.registry.size).toBe(1);
+
+    world.createQuery([TestComponent0, TestComponent1, TestComponent2, TestComponent3]);
+    world.createQuery([TestComponent0, TestComponent1]);
+    world.createQuery([TestComponent4]);
+    expect(world.queryManager.registry.size).toBe(4);
+    world.removeQuery(query1);
+    expect(world.queryManager.registry.size).toBe(4);
+    world.removeQuery(query0);
+    expect(world.queryManager.registry.size).toBe(3);
   });
 
   it('OnEntityAdd event trigger check', () => {
@@ -576,7 +589,7 @@ describe('Query tests', () => {
       const entities = createEntities(world, ctors, 50);
       entities.forEach((entity) => world.removeComponent(entity, TestComponent0));
       expect(world.queryManager.hasQuery(query)).toBeFalsy();
-      expect(world.queryManager.registry).toHaveLength(0);
+      expect(world.queryManager.registry.size).toBe(0);
     });
 
     it('on entities remove', () => {
@@ -584,7 +597,7 @@ describe('Query tests', () => {
       createEntities(world, ctors, 50);
       world.clear();
       expect(world.queryManager.hasQuery(query)).toBeFalsy();
-      expect(world.queryManager.registry).toHaveLength(0);
+      expect(world.queryManager.registry.size).toBe(0);
     });
 
     it('should be removed before events', () => {
@@ -595,7 +608,7 @@ describe('Query tests', () => {
       });
       world.clear();
       expect(isQueryRemoved).toBeTruthy();
-      expect(world.queryManager.registry).toHaveLength(0);
+      expect(world.queryManager.registry.size).toBe(0);
     });
   });
 

@@ -1,7 +1,11 @@
 import FastBitSet from 'fastbitset';
 
 export default class QueryMask {
-  constructor(public mask: FastBitSet, public notMask: FastBitSet) {}
+  public readonly key: string;
+
+  constructor(public readonly mask: FastBitSet, public readonly notMask: FastBitSet) {
+    this.key = `${mask.toString()}-${notMask.toString()}`;
+  }
 
   /**
    * check is entity matches with query
