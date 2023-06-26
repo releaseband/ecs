@@ -4,6 +4,7 @@
   "description": "ecs",
   "author": "releaseband",
   "license": "MIT",
+  "type": "module",
   "main": "dist/ecs.umd.js",
   "module": "dist/ecs.es.js",
   "types": "dist/index.d.ts",
