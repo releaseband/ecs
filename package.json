@@ -5,8 +5,8 @@
   "author": "releaseband",
   "license": "MIT",
   "type": "module",
-  "main": "dist/ecs.umd.js",
-  "module": "dist/ecs.es.js",
+  "main": "dist/ecs.umd.cjs",
+  "module": "dist/ecs.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc && vite build",
