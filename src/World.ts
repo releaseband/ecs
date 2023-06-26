@@ -270,7 +270,7 @@ export class World {
    */
   public getQueries(components: Components): Array<Query> {
     const queryMask = this.createQueryMask(components);
-    const entry = this.queryManager.getRegistryEntry(queryMask);
+    const entry = this.queryManager.registry.get(queryMask.key);
     return entry ? Array.from(entry.queries) : [];
   }
 

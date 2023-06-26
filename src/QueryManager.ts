@@ -11,9 +11,7 @@ type RegistryEntry = {
 };
 
 export default class QueryManager {
-  public registry: Array<RegistryEntry> = [];
-
-  private isNeedCleanUp = false;
+  public readonly registry = new Map<string, RegistryEntry>();
 
   constructor(
     private readonly entities: Array<number>,
@@ -32,18 +30,37 @@ export default class QueryManager {
       entities: new Set<number>(),
       queries: new Set<Query>(),
     };
-    this.registry.push(entry);
+    this.registry.set(queryMask.key, entry);
     return entry;
   }
 
   /**
-   * Find entry by mask
+   * remove reg entry and all queries
    *
-   * @param queryMask - query mask
-   * @returns registry entry or undefined
+   * @param entry - registry entry
    */
-  public getRegistryEntry(queryMask: QueryMask): RegistryEntry | undefined {
-    return this.registry.find((entry) => entry.queryMask.equal(queryMask));
+  private removeEntry(entry: RegistryEntry): void {
+    entry.queries.forEach((query) => this.removeQuery(query));
+    this.registry.delete(entry.queryMask.key);
+  }
+
+  /**
+   *
+   * remove entity from reg entry(all queries)
+   *
+   * @param entry - registry entry
+   * @param entityId - entity id
+   */
+  private removeEntityFromEntry(entry: RegistryEntry, entityId: number): void {
+    entry.entities.delete(entityId);
+    entry.queries.forEach((query) => {
+      query.remove(entityId);
+      if (!entry.entities.size && query.removeOnEmpty) {
+        query.dispose();
+        entry.queries.delete(query);
+        if (!entry.queries.size) this.registry.delete(entry.queryMask.key);
+      }
+    });
   }
 
   /**
@@ -53,8 +70,7 @@ export default class QueryManager {
    * @returns is query used
    */
   public hasQuery(query: Query): boolean {
-    const isQueryExist = this.registry.find((entry) => entry.queries.has(query));
-    return !!isQueryExist;
+    return !!this.registry.get(query.queryMask.key)?.queries.has(query);
   }
 
   /**
@@ -65,7 +81,7 @@ export default class QueryManager {
    * @returns new query instance
    */
   public createQuery(queryMask: QueryMask, removeOnEmpty: boolean): Query {
-    const entry = this.getRegistryEntry(queryMask) || this.createEntry(queryMask);
+    const entry = this.registry.get(queryMask.key) ?? this.createEntry(queryMask);
     const query = new Query(entry.entities, queryMask, removeOnEmpty);
     entry.queries.add(query);
     this.entities.forEach((entityId) => {
@@ -78,13 +94,6 @@ export default class QueryManager {
     return query;
   }
 
-  private registryPurge(): void {
-    if (this.isNeedCleanUp) {
-      this.registry = this.registry.filter((entry) => entry.queries.size);
-      this.isNeedCleanUp = false;
-    }
-  }
-
   /**
    * Remove query from registry
    *
@@ -92,12 +101,12 @@ export default class QueryManager {
    */
   // TODO: need throw error if query not registered?
   public removeQuery(query: Query): void {
-    const entry = this.registry.find((e) => e.queryMask.equal(query.queryMask));
+    const { key } = query.queryMask;
+    const entry = this.registry.get(key);
     if (entry) {
       query.dispose();
       entry.queries.delete(query);
-      this.isNeedCleanUp = true;
-      this.registryPurge();
+      if (!entry.queries.size) this.registry.delete(key);
     }
   }
 
@@ -108,27 +117,14 @@ export default class QueryManager {
    *
    */
   public removeQueries(queryMask: QueryMask): void {
-    const entry = this.getRegistryEntry(queryMask);
-    if (entry) {
-      entry.queries.forEach((query) => this.removeQuery(query));
-    }
+    const entry = this.registry.get(queryMask.key);
+    if (entry) this.removeEntry(entry);
   }
 
   public removeEntity(entityId: number): void {
     this.registry.forEach((entry) => {
-      if (entry.entities.has(entityId)) {
-        entry.entities.delete(entityId);
-        const isEmpty = entry.entities.size === 0;
-        entry.queries.forEach((query) => {
-          query.remove(entityId);
-          if (query.removeOnEmpty && isEmpty) {
-            entry.queries.delete(query);
-            this.isNeedCleanUp = true;
-          }
-        });
-      }
+      if (entry.entities.has(entityId)) this.removeEntityFromEntry(entry, entityId);
     });
-    this.registryPurge();
   }
 
   public updateEntity(entityId: number): void {
@@ -137,28 +133,16 @@ export default class QueryManager {
       const isExist = entry.entities.has(entityId);
       const isMatch = entry.queryMask.match(mask);
       if (isExist && !isMatch) {
-        entry.queries.forEach((query) => {
-          entry.entities.delete(entityId);
-          query.remove(entityId);
-          if (!entry.entities.size && query.removeOnEmpty) {
-            query.dispose();
-            entry.queries.delete(query);
-            this.isNeedCleanUp = true;
-          }
-        });
+        this.removeEntityFromEntry(entry, entityId);
       } else if (!isExist && isMatch) {
         entry.entities.add(entityId);
         entry.queries.forEach((query) => query.add(entityId));
       }
     });
-    this.registryPurge();
   }
 
   public dispose(): void {
-    this.registry.forEach((entry) => {
-      entry.queries.forEach((query) => query.dispose());
-      entry.queries.clear();
-    });
-    this.registry.length = 0;
+    this.registry.forEach((entry) => this.removeEntry(entry));
+    this.registry.clear();
   }
 }

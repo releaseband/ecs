@@ -14,8 +14,8 @@ export class Query {
 
   constructor(
     public readonly entities: Set<number>,
-    public queryMask: QueryMask,
-    public removeOnEmpty: boolean,
+    public readonly queryMask: QueryMask,
+    public readonly removeOnEmpty: boolean,
   ) {}
 
   /**
