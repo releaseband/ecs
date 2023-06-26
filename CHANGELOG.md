@@ -1,5 +1,11 @@
 ## 0.2.4
 
+## 3.0.1
+
+### Patch Changes
+
+- 4cb8e83: added module type
+
 ## 3.0.0
 
 ### Major Changes
