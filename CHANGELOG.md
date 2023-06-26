@@ -1,5 +1,11 @@
 ## 0.2.4
 
+## 3.0.2
+
+### Patch Changes
+
+- ca32b50: set correct module name
+
 ## 3.0.1
 
 ### Patch Changes
