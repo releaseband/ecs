@@ -1,5 +1,11 @@
 ## 0.2.4
 
+## 3.0.0
+
+### Major Changes
+
+- d3c8130: refactor, queries performance boost
+
 ## 2.2.1
 
 ### Patch Changes
